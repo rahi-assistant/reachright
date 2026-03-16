@@ -371,31 +371,61 @@ export default function Home() {
 
       {/* Pricing */}
       <section id="pricing" className="py-20 px-6">
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-5xl mx-auto">
           <h2 className="font-display text-3xl sm:text-4xl text-center mb-3" style={{ color: 'var(--text)' }}>Pricing</h2>
-          <p className="text-sm text-center mb-12" style={{ color: 'var(--text-secondary)' }}>Start with a free audit. Upgrade when you see the results.</p>
+          <p className="text-sm text-center mb-12" style={{ color: 'var(--text-secondary)' }}>One-time setup + affordable yearly maintenance. No hidden fees.</p>
+
+          {/* One-time setup */}
+          <div className="rounded-2xl overflow-hidden mb-6" style={{ border: '1px solid var(--border)' }}>
+            <div className="p-6 sm:p-8" style={{ background: 'var(--accent-soft)' }}>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                  <p className="text-xs font-mono uppercase tracking-wider mb-1" style={{ color: 'var(--accent)' }}>One-Time Setup</p>
+                  <p className="text-3xl font-bold" style={{ color: 'var(--text)' }}>₹9,999</p>
+                  <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>Everything you need to get found online</p>
+                </div>
+                <a href="https://wa.me/917439677931?text=Hi%2C%20interested%20in%20the%20₹9,999%20setup%20package" target="_blank"
+                  className="px-6 py-3 rounded-xl font-semibold text-sm text-white text-center transition-all whitespace-nowrap"
+                  style={{ background: 'var(--accent)' }}>
+                  Get Started →
+                </a>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-6">
+                {['Professional website (custom design)', 'Google Business optimization', 'AI visibility audit + fixes', 'Brand kit (colors, fonts)', 'WhatsApp Business setup', 'Staff training session'].map(f => (
+                  <div key={f} className="flex items-start gap-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
+                    <span style={{ color: 'var(--success)', flexShrink: 0 }}>✓</span>{f}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Monthly/Yearly plans */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-px rounded-2xl overflow-hidden stagger" style={{ background: 'var(--border)' }}>
             {[
               {
-                name: 'Free Audit', price: 'Free', desc: 'Know where you stand',
-                features: ['AI visibility score', 'Google presence check', 'Review sentiment analysis', 'Competitor comparison', 'Actionable fix list'],
+                name: 'Free Audit', price: 'Free', period: '', desc: 'See where you stand',
+                features: ['AI visibility score (ChatGPT + Gemini)', 'Google presence checklist', 'Review sentiment analysis', 'Downloadable PDF report'],
                 cta: 'Check My Score', href: '#audit', primary: false,
               },
               {
-                name: 'Starter', price: '₹2,999/mo', desc: 'Get found online',
-                features: ['Professional one-page website', 'Google Business optimization', 'AI visibility improvement', 'Custom domain included', 'WhatsApp integration', 'Monthly performance report'],
-                cta: 'Get Started', href: 'https://wa.me/917439677931?text=Hi%2C%20interested%20in%20Starter%20plan%20(₹2,999/mo)', primary: true,
+                name: 'Yearly Maintenance', price: '₹5,999', period: '/year', desc: 'Keep your presence running',
+                features: ['Domain renewal included', 'Hosting + SSL', 'Monthly AI visibility report', '2 website updates/month', 'Google review response drafts', 'Technical support'],
+                cta: 'Add Maintenance', href: 'https://wa.me/917439677931?text=Hi%2C%20interested%20in%20yearly%20maintenance%20(₹5,999/year)', primary: true,
               },
               {
-                name: 'Growth', price: '₹4,999/mo', desc: 'Full digital presence',
-                features: ['Everything in Starter', 'Multi-page website', 'Monthly SEO updates', 'Review management', 'Social media setup', 'AI ranking monitoring', 'Weekly reports'],
-                cta: 'Start Growing', href: 'https://wa.me/917439677931?text=Hi%2C%20interested%20in%20Growth%20plan%20(₹4,999/mo)', primary: false,
+                name: 'Content Pack', price: '₹2,999', period: '/month', desc: 'For salons & active businesses',
+                features: ['8 branded offer posters/month', '4 Instagram stories', '2 Google Business posts', 'Festival/seasonal designs', 'WhatsApp broadcast content', 'Brand-consistent templates'],
+                cta: 'Start Content', href: 'https://wa.me/917439677931?text=Hi%2C%20interested%20in%20Content%20Pack%20(₹2,999/month)', primary: false,
               },
             ].map(plan => (
               <div key={plan.name} className="p-6 flex flex-col" style={{ background: plan.primary ? 'var(--accent-soft)' : 'var(--surface)' }}>
                 <div className="mb-5">
                   <p className="text-xs font-mono uppercase tracking-wider mb-2" style={{ color: plan.primary ? 'var(--accent)' : 'var(--text-muted)' }}>{plan.name}</p>
-                  <p className="text-2xl font-bold" style={{ color: 'var(--text)' }}>{plan.price}</p>
+                  <div>
+                    <span className="text-2xl font-bold" style={{ color: 'var(--text)' }}>{plan.price}</span>
+                    <span className="text-sm" style={{ color: 'var(--text-muted)' }}>{plan.period}</span>
+                  </div>
                   <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>{plan.desc}</p>
                 </div>
                 <ul className="space-y-2 flex-1 mb-6">
@@ -412,6 +442,15 @@ export default function Home() {
                 </a>
               </div>
             ))}
+          </div>
+
+          {/* Total value */}
+          <div className="mt-6 rounded-xl p-4 text-center" style={{ background: 'var(--bg-alt)', border: '1px solid var(--border)' }}>
+            <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+              <span className="font-semibold" style={{ color: 'var(--text)' }}>Total first year: ₹15,998</span> (setup + maintenance)
+              <span className="mx-2" style={{ color: 'var(--border-strong)' }}>|</span>
+              Agencies charge ₹50,000+ for the same service
+            </p>
           </div>
         </div>
       </section>
