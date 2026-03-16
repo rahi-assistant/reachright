@@ -340,8 +340,8 @@ function generateReportHTML(data: {
   .hero {
     display: grid;
     grid-template-columns: 1.25fr 0.95fr;
-    gap: 16px;
-    margin-top: 18px;
+    gap: 14px;
+    margin-top: 12px;
   }
 
   .hero-copy,
@@ -359,7 +359,7 @@ function generateReportHTML(data: {
   .hero-copy {
     background: rgba(255,255,255,0.82);
     border: 1px solid var(--border);
-    padding: 24px;
+    padding: 20px;
   }
 
   .report-title,
@@ -372,28 +372,28 @@ function generateReportHTML(data: {
   }
 
   .report-title {
-    font-size: 54px;
+    font-size: 46px;
     line-height: 0.96;
-    margin: 12px 0 14px;
+    margin: 8px 0 10px;
   }
 
   .hero-body {
     max-width: 90%;
-    font-size: 15px;
-    line-height: 1.7;
+    font-size: 14px;
+    line-height: 1.6;
     color: var(--text-secondary);
   }
 
   .subject-card {
-    margin-top: 22px;
-    padding-top: 18px;
+    margin-top: 14px;
+    padding-top: 12px;
     border-top: 1px solid var(--border);
   }
 
   .subject-name {
-    font-size: 30px;
+    font-size: 26px;
     line-height: 1.05;
-    margin-bottom: 6px;
+    margin-bottom: 4px;
   }
 
   .subject-meta {
