@@ -65,16 +65,14 @@ async function getAIVisibility(name: string, type: string, city: string) {
       model: MODEL, contents: `List the top 10 best ${typeLabel}s in ${city}, India. Just names, numbered 1-10. No descriptions.`,
       config: { temperature: 0.2, maxOutputTokens: 300 },
     });
-    const lines = (res.text || '').split('\n').filter((l: string) => l.trim());
-    const mentioned: string[] = [];
+    const mentioned = parseRankedMentions(res.text || '');
     let rank: number | null = null;
     const nameLower = name.toLowerCase();
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i].replace(/^\d+[\.\)\-]\s*/, '').replace(/\*+/g, '').trim();
-      if (line) mentioned.push(line);
+    for (let i = 0; i < mentioned.length; i++) {
+      const line = mentioned[i];
       if (line.toLowerCase().includes(nameLower) || nameLower.includes(line.toLowerCase())) rank = i + 1;
     }
-    return { found: rank !== null, rank, mentioned: mentioned.slice(0, 10) };
+    return { found: rank !== null, rank, mentioned };
   } catch { return { found: false, rank: null as number | null, mentioned: [] as string[] }; }
 }
 
@@ -98,6 +96,22 @@ function escapeHtml(value: unknown): string {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
+}
+
+function parseRankedMentions(text: string): string[] {
+  const normalized = text
+    .replace(/\r/g, '')
+    .replace(/(^|\n)\s*(\d{1,2})[\.\)]?\s*\n\s*(?=\S)/g, '$1$2. ')
+    .replace(/\*\*/g, '')
+    .replace(/\*/g, '');
+
+  return normalized
+    .split('\n')
+    .map(line => line.replace(/^\s*\d{1,2}[\.\)\-:]\s*/, '').trim())
+    .filter(line => line.length > 1)
+    .filter(line => !/^\d+$/.test(line))
+    .filter(line => /[A-Za-z]/.test(line))
+    .slice(0, 10);
 }
 
 /* ── HTML Report Generator ─────────────────────────────────────────────────── */
@@ -270,7 +284,7 @@ function generateReportHTML(data: {
     top: 12mm;
     left: 12mm;
     right: 12mm;
-    bottom: 24mm;
+    bottom: 34mm;
     border: 1px solid rgba(212, 207, 197, 0.65);
     pointer-events: none;
   }
@@ -278,7 +292,7 @@ function generateReportHTML(data: {
   .page-inner {
     position: relative;
     z-index: 1;
-    padding-bottom: 20mm;
+    padding-bottom: 24mm;
   }
 
   .topbar, .footer {
@@ -490,20 +504,20 @@ function generateReportHTML(data: {
   }
 
   .summary-card {
-    margin-top: 16px;
-    padding: 18px 20px;
+    margin-top: 12px;
+    padding: 14px 18px;
     background: linear-gradient(180deg, rgba(255,242,236,0.8), rgba(255,255,255,0.88));
   }
 
   .summary-title {
-    font-size: 30px;
-    margin-bottom: 8px;
+    font-size: 26px;
+    margin-bottom: 6px;
     font-family: 'Instrument Serif', serif;
   }
 
   .summary-text {
-    font-size: 14px;
-    line-height: 1.75;
+    font-size: 13px;
+    line-height: 1.6;
     color: var(--text-secondary);
   }
 
@@ -844,16 +858,16 @@ function generateReportHTML(data: {
     position: absolute;
     left: 18mm;
     right: 18mm;
-    bottom: 9mm;
+    bottom: 7mm;
     color: var(--text-muted);
     font-size: 9px;
-    padding-top: 4mm;
-    border-top: 1px solid rgba(212, 207, 197, 0.65);
-    background: transparent;
+    padding-top: 3mm;
+    border-top: 1px solid rgba(212, 207, 197, 0.55);
+    background: linear-gradient(180deg, rgba(250,248,245,0), rgba(250,248,245,0.96) 22%, rgba(250,248,245,1) 100%);
   }
 
   .page {
-    padding-bottom: 34mm !important;
+    padding-bottom: 40mm !important;
   }
 
   .screen-toolbar {
@@ -876,6 +890,119 @@ function generateReportHTML(data: {
     font-family: 'DM Sans', sans-serif;
     cursor: pointer;
     box-shadow: 0 8px 24px rgba(26,24,20,0.08);
+  }
+
+  @media screen and (max-width: 768px) {
+    html, body {
+      background: var(--bg-alt);
+    }
+
+    .screen-toolbar {
+      top: auto;
+      right: 12px;
+      bottom: 12px;
+      left: 12px;
+      justify-content: center;
+    }
+
+    .screen-button {
+      min-height: 44px;
+      width: 100%;
+      max-width: 320px;
+    }
+
+    .page {
+      width: calc(100vw - 16px);
+      min-height: auto;
+      margin: 8px auto;
+      padding: 18px 14px 76px;
+      border-radius: 24px;
+      overflow: hidden;
+      page-break-after: auto;
+    }
+
+    .page::before {
+      top: 10px;
+      left: 10px;
+      right: 10px;
+      bottom: 56px;
+      border-radius: 18px;
+    }
+
+    .page-inner {
+      padding-bottom: 0;
+    }
+
+    .topbar,
+    .section-header,
+    .check-row,
+    .footer {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .topbar,
+    .section-header {
+      gap: 10px;
+    }
+
+    .section-copy {
+      max-width: none;
+      text-align: left;
+    }
+
+    .hero,
+    .two-up,
+    .ai-model-grid,
+    .rec-grid,
+    .timeline-grid,
+    .cta-card {
+      grid-template-columns: 1fr;
+    }
+
+    .stats-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .risk-grid {
+      grid-template-columns: 1fr 1fr 1fr;
+    }
+
+    .report-title {
+      font-size: 2.5rem;
+    }
+
+    .hero-body,
+    .summary-text,
+    .score-body {
+      max-width: none;
+    }
+
+    .score-ring {
+      width: 116px;
+      height: 116px;
+    }
+
+    .score-core {
+      width: 82px;
+      height: 82px;
+    }
+
+    .score-num {
+      font-size: 1.75rem;
+    }
+
+    .check-value {
+      white-space: normal;
+    }
+
+    .footer {
+      position: static;
+      margin-top: 16px;
+      gap: 6px;
+      padding-top: 12px;
+      width: 100%;
+    }
   }
 
   @media print {
@@ -949,7 +1076,7 @@ function generateReportHTML(data: {
       <div class="summary-card">
         <div class="summary-title">Executive Summary</div>
         <div class="summary-text">
-          This report is designed to feel client-ready and decision-ready. It shows where your business is already credible, where visibility is breaking, and which fixes should be prioritised first to improve discovery and conversion.
+          This report shows what already looks credible online, where discovery is breaking, and which fixes should be prioritised first.
         </div>
       </div>
 
@@ -1186,16 +1313,14 @@ async function checkChatGPTVisibility(name: string, type: string, city: string) 
     });
     if (!res.ok) return { found: false, rank: null as number | null, mentioned: [] as string[] };
     const data = await res.json();
-    const text = data?.choices?.[0]?.message?.content || '';
-    const lines = text.split('\n').filter((l: string) => l.trim());
-    const mentioned: string[] = []; let rank: number | null = null;
+    const mentioned = parseRankedMentions(data?.choices?.[0]?.message?.content || '');
+    let rank: number | null = null;
     const nameLower = name.toLowerCase();
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i].replace(/^\d+[\.\)\-]\s*/, '').replace(/\*+/g, '').trim();
-      if (line) mentioned.push(line);
+    for (let i = 0; i < mentioned.length; i++) {
+      const line = mentioned[i];
       if (line.toLowerCase().includes(nameLower) || nameLower.includes(line.toLowerCase())) rank = i + 1;
     }
-    return { found: rank !== null, rank, mentioned: mentioned.slice(0, 10) };
+    return { found: rank !== null, rank, mentioned };
   } catch { return { found: false, rank: null as number | null, mentioned: [] as string[] }; }
 }
 

@@ -49,6 +49,24 @@ interface AIVisibilityResult {
   chatgptMentioned: string[];
 }
 
+function parseRankedMentions(text: string): string[] {
+  const normalized = text
+    .replace(/\r/g, '')
+    // Convert patterns like "1.\nBusiness Name" into "1. Business Name"
+    .replace(/(^|\n)\s*(\d{1,2})[\.\)]?\s*\n\s*(?=\S)/g, '$1$2. ')
+    .replace(/\*\*/g, '')
+    .replace(/\*/g, '');
+
+  const mentions = normalized
+    .split('\n')
+    .map(line => line.replace(/^\s*\d{1,2}[\.\)\-:]\s*/, '').trim())
+    .filter(line => line.length > 1)
+    .filter(line => !/^\d+$/.test(line))
+    .filter(line => /[A-Za-z]/.test(line));
+
+  return mentions.slice(0, 10);
+}
+
 /* ── Gemini: LLM Visibility Check ──────────────────────────────────────────── */
 
 async function checkLLMVisibility(businessName: string, businessType: string, city: string): Promise<{
@@ -70,14 +88,12 @@ async function checkLLMVisibility(businessName: string, businessType: string, ci
     });
 
     const text = response.text || '';
-    const lines = text.split('\n').filter((l: string) => l.trim());
-    const mentioned: string[] = [];
+    const mentioned = parseRankedMentions(text);
     let rank: number | null = null;
     const nameLower = businessName.toLowerCase();
 
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i].replace(/^\d+[\.\)\-]\s*/, '').replace(/\*+/g, '').trim();
-      if (line) mentioned.push(line);
+    for (let i = 0; i < mentioned.length; i++) {
+      const line = mentioned[i];
       if (line.toLowerCase().includes(nameLower) || nameLower.includes(line.toLowerCase())) {
         rank = i + 1;
       }
@@ -124,17 +140,15 @@ async function checkChatGPTVisibility(businessName: string, businessType: string
 
     const data = await res.json();
     const text = data?.choices?.[0]?.message?.content || '';
-    const lines = text.split('\n').filter((l: string) => l.trim());
-    const mentioned: string[] = [];
+    const mentioned = parseRankedMentions(text);
     let rank: number | null = null;
     const nameLower = businessName.toLowerCase();
 
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i].replace(/^\d+[\.\)\-]\s*/, '').replace(/\*+/g, '').trim();
-      if (line) mentioned.push(line);
+    for (let i = 0; i < mentioned.length; i++) {
+      const line = mentioned[i];
       if (line.toLowerCase().includes(nameLower) || nameLower.includes(line.toLowerCase())) rank = i + 1;
     }
-    return { found: rank !== null, rank, mentioned: mentioned.slice(0, 10) };
+    return { found: rank !== null, rank, mentioned };
   } catch { return { found: false, rank: null, mentioned: [] }; }
 }
 
