@@ -86,3 +86,32 @@ html {
   background-image: radial-gradient(circle, var(--border) 1px, transparent 1px);
   background-size: 32px 32px;
 }
+
+/* ── Mobile-specific overrides ──────────────────────────────────────────── */
+
+@media (max-width: 640px) {
+  /* Tighter padding on mobile */
+  section { padding-left: 1rem; padding-right: 1rem; }
+
+  /* Stack stats 2x2 on mobile */
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+
+  /* Scanner issue tags: hide overflow on very small screens */
+  .issue-tags { overflow-x: auto; flex-wrap: nowrap; scrollbar-width: none; }
+  .issue-tags::-webkit-scrollbar { display: none; }
+
+  /* Pricing: full width stack */
+  .pricing-grid { grid-template-columns: 1fr; }
+
+  /* Nav: compact */
+  nav .nav-links { display: none; }
+
+  /* Hero heading size floor */
+  .hero-heading { font-size: 2.25rem; }
+
+  /* Scanner input stack */
+  .scanner-controls { flex-direction: column; }
+
+  /* Footer stack */
+  footer > div { flex-direction: column; text-align: center; }
+}

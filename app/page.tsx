@@ -95,41 +95,70 @@ function Scanner() {
             </p>
           </div>
 
-          {/* Table header */}
-          <div className="grid grid-cols-[1fr_60px_60px_80px] sm:grid-cols-[1fr_80px_80px_100px] gap-2 px-3 py-2 text-[10px] font-mono uppercase tracking-wider" style={{ color: 'var(--data-muted)' }}>
-            <span>Business</span>
-            <span className="text-right">Rating</span>
-            <span className="text-right">Reviews</span>
-            <span className="text-right">Score</span>
-          </div>
-
-          <div className="space-y-1">
-            {results.map((r, i) => (
-              <div key={i}
-                className="grid grid-cols-[1fr_60px_60px_80px] sm:grid-cols-[1fr_80px_80px_100px] gap-2 items-center px-3 py-2.5 rounded-lg transition-colors animate-reveal"
-                style={{ background: i % 2 === 0 ? 'var(--data-surface)' : 'transparent', animationDelay: `${i * 0.03}s` }}>
-                <div className="min-w-0">
-                  <p className="text-sm font-medium truncate" style={{ color: 'var(--data-text)' }}>{r.name}</p>
-                  <div className="flex items-center gap-1.5 mt-0.5">
-                    {r.website === 'NONE' && (
-                      <span className="text-[9px] px-1.5 py-0.5 rounded font-mono font-bold" style={{ background: '#dc262620', color: '#f87171' }}>NO SITE</span>
-                    )}
-                    {r.issues.slice(0, 2).map((issue, j) => (
-                      <span key={j} className="text-[9px] px-1.5 py-0.5 rounded font-mono" style={{ background: 'var(--data-border)', color: 'var(--data-muted)' }}>{issue}</span>
-                    ))}
+          {/* Desktop: table layout */}
+          <div className="hidden sm:block">
+            <div className="grid grid-cols-[1fr_80px_80px_100px] gap-2 px-3 py-2 text-[10px] font-mono uppercase tracking-wider" style={{ color: 'var(--data-muted)' }}>
+              <span>Business</span>
+              <span className="text-right">Rating</span>
+              <span className="text-right">Reviews</span>
+              <span className="text-right">Score</span>
+            </div>
+            <div className="space-y-1">
+              {results.map((r, i) => (
+                <div key={i}
+                  className="grid grid-cols-[1fr_80px_80px_100px] gap-2 items-center px-3 py-2.5 rounded-lg transition-colors animate-reveal"
+                  style={{ background: i % 2 === 0 ? 'var(--data-surface)' : 'transparent', animationDelay: `${i * 0.03}s` }}>
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium truncate" style={{ color: 'var(--data-text)' }}>{r.name}</p>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      {r.website === 'NONE' && (
+                        <span className="text-[9px] px-1.5 py-0.5 rounded font-mono font-bold" style={{ background: '#dc262620', color: '#f87171' }}>NO SITE</span>
+                      )}
+                      {r.issues.slice(0, 2).map((issue, j) => (
+                        <span key={j} className="text-[9px] px-1.5 py-0.5 rounded font-mono" style={{ background: 'var(--data-border)', color: 'var(--data-muted)' }}>{issue}</span>
+                      ))}
+                    </div>
+                  </div>
+                  <span className="text-right text-sm font-mono" style={{ color: r.rating >= 4 ? '#4ade80' : r.rating >= 3 ? '#fbbf24' : '#f87171' }}>{r.rating || '—'}</span>
+                  <span className="text-right text-sm font-mono" style={{ color: 'var(--data-muted)' }}>{r.reviews.toLocaleString()}</span>
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--data-border)' }}>
+                      <div className="h-full rounded-full score-bar" style={{ width: `${Math.min(r.score, 100)}%`, background: barColor(r.score) }} />
+                    </div>
+                    <span className="text-xs font-mono font-bold w-6 text-right" style={{ color: barColor(r.score) }}>{r.score}</span>
                   </div>
                 </div>
-                <span className="text-right text-sm font-mono" style={{ color: r.rating >= 4 ? '#4ade80' : r.rating >= 3 ? '#fbbf24' : '#f87171' }}>
-                  {r.rating || '—'}
-                </span>
-                <span className="text-right text-sm font-mono" style={{ color: 'var(--data-muted)' }}>
-                  {r.reviews.toLocaleString()}
-                </span>
-                <div className="flex items-center gap-2">
-                  <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--data-border)' }}>
-                    <div className="h-full rounded-full score-bar" style={{ width: `${Math.min(r.score, 100)}%`, background: barColor(r.score) }} />
+              ))}
+            </div>
+          </div>
+
+          {/* Mobile: card layout */}
+          <div className="sm:hidden space-y-2">
+            {results.map((r, i) => (
+              <div key={i} className="rounded-lg p-3 animate-reveal"
+                style={{ background: 'var(--data-surface)', animationDelay: `${i * 0.03}s` }}>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium truncate" style={{ color: 'var(--data-text)' }}>{r.name}</p>
+                    <div className="flex items-center gap-2 mt-1 text-xs font-mono" style={{ color: 'var(--data-muted)' }}>
+                      <span style={{ color: r.rating >= 4 ? '#4ade80' : '#fbbf24' }}>★ {r.rating || '—'}</span>
+                      <span>{r.reviews.toLocaleString()} reviews</span>
+                    </div>
                   </div>
-                  <span className="text-xs font-mono font-bold w-6 text-right" style={{ color: barColor(r.score) }}>{r.score}</span>
+                  <div className="flex items-center gap-1.5 flex-shrink-0">
+                    <div className="w-12 h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--data-border)' }}>
+                      <div className="h-full rounded-full score-bar" style={{ width: `${Math.min(r.score, 100)}%`, background: barColor(r.score) }} />
+                    </div>
+                    <span className="text-xs font-mono font-bold" style={{ color: barColor(r.score) }}>{r.score}</span>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-1 mt-2">
+                  {r.website === 'NONE' && (
+                    <span className="text-[9px] px-1.5 py-0.5 rounded font-mono font-bold" style={{ background: '#dc262620', color: '#f87171' }}>NO SITE</span>
+                  )}
+                  {r.issues.slice(0, 2).map((issue, j) => (
+                    <span key={j} className="text-[9px] px-1.5 py-0.5 rounded font-mono" style={{ background: 'var(--data-border)', color: 'var(--data-muted)' }}>{issue}</span>
+                  ))}
                 </div>
               </div>
             ))}
