@@ -103,7 +103,7 @@ function AuditTool() {
             </button>
           </div>
           <p className="text-xs mt-2.5" style={{ color: 'var(--text-muted)' }}>
-            Enter your business name and city. We'll find it on Google and check your online presence.
+            Enter your business name and city. We&apos;ll check your Google presence and AI visibility.
           </p>
         </div>
       )}
@@ -252,7 +252,7 @@ function AuditTool() {
             <p className="text-lg font-semibold">Want us to fix this for you?</p>
             <p className="text-sm mt-1 opacity-80">We'll build your website, optimize your Google listing, and get you more customers.</p>
             <a
-              href={`https://wa.me/918777685015?text=${encodeURIComponent(`Hi, I just checked my business "${selected.name}" on ReachRight. Score: ${selected.score}/100. I'd like help improving my online presence.`)}`}
+              href={`https://wa.me/917439677931?text=${encodeURIComponent(`Hi, I just checked my business "${selected.name}" on ReachRight. Score: ${selected.score}/100. I'd like help improving my online presence.`)}`}
               target="_blank"
               className="inline-block mt-4 px-6 py-2.5 rounded-xl font-semibold text-sm transition-all"
               style={{ background: 'white', color: 'var(--accent)' }}>
@@ -281,7 +281,7 @@ export default function Home() {
             <a href="#audit" className="hidden sm:block transition-colors" style={{ color: 'var(--text-secondary)' }}>Free Audit</a>
             <a href="#how" className="hidden sm:block transition-colors" style={{ color: 'var(--text-secondary)' }}>How it works</a>
             <a href="#pricing" className="hidden sm:block transition-colors" style={{ color: 'var(--text-secondary)' }}>Pricing</a>
-            <a href="https://wa.me/918777685015?text=Hi%2C%20I%20want%20help%20with%20my%20business%20online%20presence" target="_blank"
+            <a href="https://wa.me/917439677931?text=Hi%2C%20I%20want%20help%20with%20my%20business%20online%20presence" target="_blank"
               className="px-4 py-1.5 text-white text-[13px] font-semibold rounded-lg transition-all"
               style={{ background: 'var(--accent)' }}>
               Contact Us
@@ -294,10 +294,11 @@ export default function Home() {
       <section className="pt-20 sm:pt-28 pb-8 px-6 dot-grid">
         <div className="max-w-3xl mx-auto text-center">
           <h1 className="font-display text-[clamp(2.2rem,5.5vw,4rem)] leading-[1.1] tracking-tight animate-reveal" style={{ color: 'var(--text)' }}>
-            Can your customers<br />find you on Google?
+            When someone asks AI<br />for the best in your city,<br />
+            <em className="not-italic" style={{ color: 'var(--accent)' }}>do you show up?</em>
           </h1>
           <p className="mt-5 text-base sm:text-lg leading-relaxed max-w-xl mx-auto animate-reveal" style={{ animationDelay: '0.08s', color: 'var(--text-secondary)' }}>
-            Check your business&apos;s online health in 30 seconds. Free. No signup.
+            ChatGPT, Gemini, and Siri now recommend businesses. We check if AI can find yours — plus your Google presence, reviews, and website. Free. 30 seconds.
           </p>
         </div>
       </section>
@@ -313,9 +314,9 @@ export default function Home() {
       <section className="border-y py-8 px-6" style={{ borderColor: 'var(--border)', background: 'var(--bg-alt)' }}>
         <div className="max-w-4xl mx-auto grid grid-cols-3 gap-6 text-center">
           {[
-            { num: '27%', label: 'of local businesses have no website' },
-            { num: '46%', label: 'have less than 50 Google reviews' },
-            { num: '3x', label: 'more calls with a complete Google profile' },
+            { num: '80%', label: 'of local businesses are invisible to AI' },
+            { num: '27%', label: 'have no website at all' },
+            { num: '5x', label: 'more discovery when AI recommends you' },
           ].map(s => (
             <div key={s.label}>
               <p className="text-2xl sm:text-3xl font-bold font-mono" style={{ color: 'var(--text)' }}>{s.num}</p>
@@ -331,9 +332,9 @@ export default function Home() {
           <h2 className="font-display text-3xl sm:text-4xl text-center mb-14" style={{ color: 'var(--text)' }}>How we help</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-10 stagger">
             {[
-              { num: '01', title: 'Check', body: 'Enter your business name. Our AI checks your Google listing, website, reviews, photos, and hours — and gives you a score out of 100.' },
-              { num: '02', title: 'Fix', body: 'We build you a fast, mobile-friendly website. Optimize your Google Business listing. Add photos. Set up WhatsApp ordering. All done for you.' },
-              { num: '03', title: 'Grow', body: 'Customers find you when they search. More calls, more walk-ins, more orders. We send you a monthly report showing the results.' },
+              { num: '01', title: 'AI Audit', body: 'Enter your business name. We check if ChatGPT, Gemini, and Google recommend you — plus your website, reviews, photos, and ratings. Score out of 100.' },
+              { num: '02', title: 'Get Visible', body: 'We build your website, optimize your Google listing, and improve your digital footprint so AI assistants start recommending you to customers.' },
+              { num: '03', title: 'Stay Ahead', body: 'Monthly AI visibility reports. Track your ranking in AI recommendations. See how you compare to competitors. We keep you visible as AI evolves.' },
             ].map(step => (
               <div key={step.num} className="text-center md:text-left">
                 <span className="inline-block text-xs font-mono font-bold px-2 py-0.5 rounded-md mb-3" style={{ color: 'var(--accent)', background: 'var(--accent-soft)' }}>{step.num}</span>
@@ -349,10 +350,10 @@ export default function Home() {
       <section className="py-14 px-6 relative noise" style={{ background: 'var(--data-bg)' }}>
         <div className="max-w-3xl mx-auto text-center relative z-10">
           <p className="font-display text-2xl sm:text-3xl italic" style={{ color: 'var(--data-text)' }}>
-            &ldquo;Peter Cat in Kolkata has 39,806 Google reviews<br className="hidden sm:block" /> and no website. Their score? 35 out of 100.&rdquo;
+            &ldquo;We asked AI for the best restaurants in Kolkata.<br className="hidden sm:block" /> 80% of actual top restaurants didn&apos;t show up.&rdquo;
           </p>
           <p className="mt-4 text-sm" style={{ color: 'var(--data-muted)' }}>
-            Even the most popular businesses can be invisible online. Check yours.
+            AI is the new search. If you&apos;re not in its recommendations, you&apos;re losing customers to competitors who are.
           </p>
         </div>
       </section>
@@ -372,12 +373,12 @@ export default function Home() {
               {
                 name: 'Growth', price: '₹4,999/mo', desc: 'Get found by customers',
                 features: ['Professional website', 'Google Business setup', 'Monthly SEO updates', 'Review management', 'WhatsApp integration', 'Monthly growth report'],
-                cta: 'Start Growing', href: 'https://wa.me/918777685015?text=Hi%2C%20interested%20in%20Growth%20plan', primary: true,
+                cta: 'Start Growing', href: 'https://wa.me/917439677931?text=Hi%2C%20interested%20in%20Growth%20plan', primary: true,
               },
               {
                 name: 'Premium', price: '₹9,999/mo', desc: 'Full digital marketing',
                 features: ['Everything in Growth', 'Social media management', 'Google Ads setup', 'Competitor monitoring', 'Dedicated manager', 'Weekly reports'],
-                cta: 'Contact Us', href: 'https://wa.me/918777685015?text=Hi%2C%20interested%20in%20Premium%20plan', primary: false,
+                cta: 'Contact Us', href: 'https://wa.me/917439677931?text=Hi%2C%20interested%20in%20Premium%20plan', primary: false,
               },
             ].map(plan => (
               <div key={plan.name} className="p-6 flex flex-col" style={{ background: plan.primary ? 'var(--accent-soft)' : 'var(--surface)' }}>
@@ -408,13 +409,13 @@ export default function Home() {
       <section className="py-16 px-6" style={{ background: 'var(--bg-alt)' }}>
         <div className="max-w-2xl mx-auto text-center">
           <h2 className="font-display text-3xl sm:text-4xl mb-4" style={{ color: 'var(--text)' }}>
-            Don&apos;t lose customers<br />to competitors who show up first.
+            AI is recommending<br />your competitors. Not you.
           </h2>
           <p className="text-sm mb-6" style={{ color: 'var(--text-secondary)' }}>
-            Check your score. It takes 30 seconds.
+            Check your AI visibility score. 30 seconds. Free.
           </p>
           <a href="#audit" className="inline-block px-6 py-3 text-white font-semibold rounded-xl" style={{ background: 'var(--accent)' }}>
-            Check My Business →
+            Check My AI Score →
           </a>
         </div>
       </section>
@@ -428,7 +429,7 @@ export default function Home() {
           </div>
           <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Helping local businesses get found online.</p>
           <div className="flex items-center gap-4 text-xs" style={{ color: 'var(--text-muted)' }}>
-            <a href="https://wa.me/918777685015" target="_blank" className="hover:underline">WhatsApp</a>
+            <a href="https://wa.me/917439677931" target="_blank" className="hover:underline">WhatsApp</a>
             <a href="mailto:hello@reachright.app" className="hover:underline">Email</a>
           </div>
         </div>
