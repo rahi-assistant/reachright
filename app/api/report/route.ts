@@ -284,7 +284,7 @@ function generateReportHTML(data: {
     top: 12mm;
     left: 12mm;
     right: 12mm;
-    bottom: 34mm;
+    bottom: 5mm;
     border: 1px solid rgba(212, 207, 197, 0.65);
     pointer-events: none;
   }
@@ -507,6 +507,8 @@ function generateReportHTML(data: {
     margin-top: 12px;
     padding: 14px 18px;
     background: linear-gradient(180deg, rgba(255,242,236,0.8), rgba(255,255,255,0.88));
+    break-inside: avoid;
+    page-break-inside: avoid;
   }
 
   .summary-title {
@@ -1021,7 +1023,7 @@ function generateReportHTML(data: {
       <div class="topbar">
         <div class="brand">
           <div class="brand-mark">
-            <svg width="16" height="16" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <svg width="24" height="24" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
               <circle cx="16" cy="15" r="9" stroke="white" stroke-width="2" fill="none" opacity="0.35"/>
               <circle cx="16" cy="15" r="5" stroke="white" stroke-width="2" fill="none" opacity="0.65"/>
               <circle cx="16" cy="15" r="2" fill="white"/>
@@ -1092,7 +1094,7 @@ function generateReportHTML(data: {
       <div class="topbar">
         <div class="brand">
           <div class="brand-mark">
-            <svg width="16" height="16" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <svg width="24" height="24" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
               <circle cx="16" cy="15" r="9" stroke="white" stroke-width="2" fill="none" opacity="0.35"/>
               <circle cx="16" cy="15" r="5" stroke="white" stroke-width="2" fill="none" opacity="0.65"/>
               <circle cx="16" cy="15" r="2" fill="white"/>
@@ -1183,7 +1185,7 @@ function generateReportHTML(data: {
       <div class="topbar">
         <div class="brand">
           <div class="brand-mark">
-            <svg width="16" height="16" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <svg width="24" height="24" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
               <circle cx="16" cy="15" r="9" stroke="white" stroke-width="2" fill="none" opacity="0.35"/>
               <circle cx="16" cy="15" r="5" stroke="white" stroke-width="2" fill="none" opacity="0.65"/>
               <circle cx="16" cy="15" r="2" fill="white"/>
@@ -1221,7 +1223,7 @@ function generateReportHTML(data: {
       <div class="topbar">
         <div class="brand">
           <div class="brand-mark">
-            <svg width="16" height="16" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <svg width="24" height="24" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
               <circle cx="16" cy="15" r="9" stroke="white" stroke-width="2" fill="none" opacity="0.35"/>
               <circle cx="16" cy="15" r="5" stroke="white" stroke-width="2" fill="none" opacity="0.65"/>
               <circle cx="16" cy="15" r="2" fill="white"/>
