@@ -366,19 +366,19 @@ export default function Home() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-px rounded-2xl overflow-hidden stagger" style={{ background: 'var(--border)' }}>
             {[
               {
-                name: 'Audit', price: 'Free', desc: 'Know where you stand',
-                features: ['Full online presence score', 'Google profile review', '6-point checklist', 'Actionable improvement tips'],
-                cta: 'Get Free Audit', href: '#audit', primary: false,
+                name: 'Free Audit', price: 'Free', desc: 'Know where you stand',
+                features: ['AI visibility score', 'Google presence check', 'Review sentiment analysis', 'Competitor comparison', 'Actionable fix list'],
+                cta: 'Check My Score', href: '#audit', primary: false,
               },
               {
-                name: 'Growth', price: '₹4,999/mo', desc: 'Get found by customers',
-                features: ['Professional website', 'Google Business setup', 'Monthly SEO updates', 'Review management', 'WhatsApp integration', 'Monthly growth report'],
-                cta: 'Start Growing', href: 'https://wa.me/917439677931?text=Hi%2C%20interested%20in%20Growth%20plan', primary: true,
+                name: 'Starter', price: '₹2,999/mo', desc: 'Get found online',
+                features: ['Professional one-page website', 'Google Business optimization', 'AI visibility improvement', 'Custom domain included', 'WhatsApp integration', 'Monthly performance report'],
+                cta: 'Get Started', href: 'https://wa.me/917439677931?text=Hi%2C%20interested%20in%20Starter%20plan%20(₹2,999/mo)', primary: true,
               },
               {
-                name: 'Premium', price: '₹9,999/mo', desc: 'Full digital marketing',
-                features: ['Everything in Growth', 'Social media management', 'Google Ads setup', 'Competitor monitoring', 'Dedicated manager', 'Weekly reports'],
-                cta: 'Contact Us', href: 'https://wa.me/917439677931?text=Hi%2C%20interested%20in%20Premium%20plan', primary: false,
+                name: 'Growth', price: '₹4,999/mo', desc: 'Full digital presence',
+                features: ['Everything in Starter', 'Multi-page website', 'Monthly SEO updates', 'Review management', 'Social media setup', 'AI ranking monitoring', 'Weekly reports'],
+                cta: 'Start Growing', href: 'https://wa.me/917439677931?text=Hi%2C%20interested%20in%20Growth%20plan%20(₹4,999/mo)', primary: false,
               },
             ].map(plan => (
               <div key={plan.name} className="p-6 flex flex-col" style={{ background: plan.primary ? 'var(--accent-soft)' : 'var(--surface)' }}>
