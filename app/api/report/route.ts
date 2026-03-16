@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenAI } from '@google/genai';
+import { rateLimit } from '@/app/lib/rate-limit';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -7,6 +8,7 @@ export const dynamic = 'force-dynamic';
 const PLACES_SEARCH_URL = 'https://places.googleapis.com/v1/places:searchText';
 const MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY || '';
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY || '';
 const MODEL = 'gemini-3-flash-preview';
 
 const genai = GEMINI_API_KEY ? new GoogleGenAI({ apiKey: GEMINI_API_KEY }) : null;
@@ -93,7 +95,7 @@ async function getRecommendations(name: string, type: string, items: AuditItem[]
 
 function generateReportHTML(data: {
   name: string; address: string; type: string; score: number;
-  items: AuditItem[]; ai: { found: boolean; rank: number | null; mentioned: string[] };
+  items: AuditItem[]; ai: { found: boolean; rank: number | null; mentioned: string[]; geminiRank: number | null; geminiFound: boolean; chatgptRank: number | null; chatgptFound: boolean; chatgptMentioned: string[] };
   recommendations: string[]; date: string;
 }): string {
   const { name, address, type, score, items, ai, recommendations, date } = data;
@@ -240,15 +242,37 @@ function generateReportHTML(data: {
 
   <div class="section-title">AI Visibility</div>
   <div class="ai-box">
-    <div class="ai-title">${ai.found ? `Your business ranks #${ai.rank} in AI recommendations` : 'Your business is not recommended by AI'}</div>
-    <div class="ai-subtitle">We asked: "Best ${(type || 'business').replace(/_/g, ' ')}s in your city"</div>
-    <ul class="ai-list">
-      ${ai.mentioned.map((m, i) => {
-        const isMatch = m.toLowerCase().includes(name.toLowerCase()) || name.toLowerCase().includes(m.toLowerCase());
-        return `<li class="${isMatch ? 'found' : ''}">${i + 1}. ${m} ${isMatch ? '<span class="ai-badge">YOUR BUSINESS</span>' : ''}</li>`;
-      }).join('\n      ')}
-    </ul>
-    ${!ai.found ? `<div class="ai-not-found"><p>When customers ask ChatGPT, Gemini, or Siri for recommendations, your business doesn't appear. As AI search grows, this gap will cost you more customers.</p></div>` : ''}
+    <div class="ai-title">${ai.found ? `Your business is recommended by AI` : 'Your business is not recommended by AI'}</div>
+    <div class="ai-subtitle">We asked two leading AI models: "Best ${(type || 'business').replace(/_/g, ' ')}s in your city"</div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px;">
+      <div style="background: rgba(255,255,255,0.03); border-radius: 10px; padding: 14px;">
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
+          <span style="font-size: 12px; font-weight: 600; color: #f2efe9;">Google Gemini</span>
+          <span style="font-size: 9px; padding: 2px 6px; border-radius: 4px; background: ${ai.geminiFound ? 'rgba(21,128,61,0.2)' : 'rgba(220,38,38,0.15)'}; color: ${ai.geminiFound ? '#4ade80' : '#fca5a5'};">${ai.geminiFound ? '#' + ai.geminiRank : 'Not found'}</span>
+        </div>
+        <ul class="ai-list">
+          ${ai.mentioned.slice(0, 5).map((m, i) => {
+            const isMatch = m.toLowerCase().includes(name.toLowerCase()) || name.toLowerCase().includes(m.toLowerCase());
+            return `<li class="${isMatch ? 'found' : ''}">${i + 1}. ${m} ${isMatch ? '<span class="ai-badge">YOU</span>' : ''}</li>`;
+          }).join('\n          ')}
+        </ul>
+      </div>
+      <div style="background: rgba(255,255,255,0.03); border-radius: 10px; padding: 14px;">
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
+          <span style="font-size: 12px; font-weight: 600; color: #f2efe9;">ChatGPT</span>
+          <span style="font-size: 9px; padding: 2px 6px; border-radius: 4px; background: ${ai.chatgptFound ? 'rgba(21,128,61,0.2)' : 'rgba(220,38,38,0.15)'}; color: ${ai.chatgptFound ? '#4ade80' : '#fca5a5'};">${ai.chatgptFound ? '#' + ai.chatgptRank : 'Not found'}</span>
+        </div>
+        <ul class="ai-list">
+          ${(ai.chatgptMentioned || []).slice(0, 5).map((m, i) => {
+            const isMatch = m.toLowerCase().includes(name.toLowerCase()) || name.toLowerCase().includes(m.toLowerCase());
+            return `<li class="${isMatch ? 'found' : ''}">${i + 1}. ${m} ${isMatch ? '<span class="ai-badge">YOU</span>' : ''}</li>`;
+          }).join('\n          ')}
+        </ul>
+      </div>
+    </div>
+
+    ${!ai.found ? `<div class="ai-not-found"><p>Neither ChatGPT nor Google Gemini recommend your business when asked. As more customers use AI to search, this gap will cost you customers every day.</p></div>` : ''}
   </div>
 
   <div class="section-title">Google Presence Checklist</div>
@@ -316,17 +340,47 @@ function generateReportHTML(data: {
 
 /* ── API Route ─────────────────────────────────────────────────────────────── */
 
+async function checkChatGPTVisibility(name: string, type: string, city: string) {
+  if (!OPENAI_API_KEY) return { found: false, rank: null as number | null, mentioned: [] as string[] };
+  const typeLabel = (type || '').replace(/_/g, ' ').toLowerCase() || 'business';
+  try {
+    const res = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${OPENAI_API_KEY}` },
+      body: JSON.stringify({ model: 'gpt-4o-mini', messages: [{ role: 'user', content: `List the top 10 best ${typeLabel}s in ${city}, India. Just names, numbered 1-10. No descriptions.` }], temperature: 0.2, max_tokens: 300 }),
+    });
+    if (!res.ok) return { found: false, rank: null as number | null, mentioned: [] as string[] };
+    const data = await res.json();
+    const text = data?.choices?.[0]?.message?.content || '';
+    const lines = text.split('\n').filter((l: string) => l.trim());
+    const mentioned: string[] = []; let rank: number | null = null;
+    const nameLower = name.toLowerCase();
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].replace(/^\d+[\.\)\-]\s*/, '').replace(/\*+/g, '').trim();
+      if (line) mentioned.push(line);
+      if (line.toLowerCase().includes(nameLower) || nameLower.includes(line.toLowerCase())) rank = i + 1;
+    }
+    return { found: rank !== null, rank, mentioned: mentioned.slice(0, 10) };
+  } catch { return { found: false, rank: null as number | null, mentioned: [] as string[] }; }
+}
+
 export async function GET(req: NextRequest) {
+  // Rate limit: 5 reports per IP per hour
+  const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
+  const { allowed } = rateLimit(`report:${ip}`, 5, 60 * 60 * 1000);
+  if (!allowed) {
+    return NextResponse.json({ error: 'Rate limit exceeded. Try again later.' }, { status: 429 });
+  }
+
   const { searchParams } = new URL(req.url);
   const query = searchParams.get('q') || '';
-  const format = searchParams.get('format') || 'html'; // html or json
+  const format = searchParams.get('format') || 'html';
 
   if (!query || query.length < 3) {
     return NextResponse.json({ error: 'Enter business name and city' }, { status: 400 });
   }
 
   try {
-    // 1. Find business
     const response = await fetch(PLACES_SEARCH_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-Goog-Api-Key': MAPS_API_KEY, 'X-Goog-FieldMask': FIELD_MASK },
@@ -343,22 +397,40 @@ export async function GET(req: NextRequest) {
     const type = (place.primaryType as string) || '';
     const city = address.split(',').slice(-3, -1).join(',').trim() || 'the city';
 
-    // 2. Audit + AI checks in parallel
+    // Audit + ALL AI checks in parallel (Gemini + ChatGPT + recommendations)
     const { score, items } = auditBusiness(place);
-    const [ai, recommendations] = await Promise.all([
+    const [geminiAI, chatgptAI, recommendations] = await Promise.all([
       getAIVisibility(name, type, city),
+      checkChatGPTVisibility(name, type, city),
       getRecommendations(name, type, items, score),
     ]);
 
-    // Add AI visibility to items
-    if (ai.found) {
-      items.unshift({ label: 'AI Visibility', status: ai.rank! <= 3 ? 'good' : 'warn', value: `#${ai.rank} in AI`, tip: 'AI assistants recommend your business.' });
+    // Merge AI results
+    const bestRank = geminiAI.found && chatgptAI.found
+      ? Math.min(geminiAI.rank!, chatgptAI.rank!)
+      : geminiAI.rank || chatgptAI.rank;
+    const foundInAny = geminiAI.found || chatgptAI.found;
+    const foundCount = (geminiAI.found ? 1 : 0) + (chatgptAI.found ? 1 : 0);
+
+    const ai = {
+      found: foundInAny,
+      rank: bestRank,
+      mentioned: geminiAI.mentioned,
+      geminiRank: geminiAI.rank, geminiFound: geminiAI.found,
+      chatgptRank: chatgptAI.rank, chatgptFound: chatgptAI.found,
+      chatgptMentioned: chatgptAI.mentioned,
+    };
+
+    // Score + AI item
+    if (foundCount === 2) {
+      items.unshift({ label: 'AI Visibility', status: bestRank! <= 3 ? 'good' : 'warn', value: `#${bestRank} (both AIs)`, tip: `Gemini: #${geminiAI.rank}. ChatGPT: #${chatgptAI.rank}.` });
+    } else if (foundCount === 1) {
+      items.unshift({ label: 'AI Visibility', status: 'warn', value: `Found in 1/2 AIs`, tip: `${geminiAI.found ? `Gemini: #${geminiAI.rank}` : 'Gemini: not found'}. ${chatgptAI.found ? `ChatGPT: #${chatgptAI.rank}` : 'ChatGPT: not found'}.` });
     } else {
-      items.unshift({ label: 'AI Visibility', status: 'bad', value: 'Not found', tip: 'AI assistants don\'t recommend your business.' });
-      if (score > 20) { /* adjust score */ }
+      items.unshift({ label: 'AI Visibility', status: 'bad', value: 'Not found', tip: 'Neither ChatGPT nor Gemini recommend your business.' });
     }
 
-    const finalScore = ai.found ? Math.min(100, score) : Math.max(0, score - 20);
+    const finalScore = Math.max(0, foundCount === 2 ? score : foundCount === 1 ? score - 8 : score - 20);
     const date = new Date().toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' });
 
     if (format === 'json') {

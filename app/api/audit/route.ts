@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenAI } from '@google/genai';
+import { rateLimit } from '@/app/lib/rate-limit';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -283,6 +284,16 @@ function auditBusiness(place: Record<string, unknown>): { score: number; items: 
 /* ── API Route ─────────────────────────────────────────────────────────────── */
 
 export async function GET(req: NextRequest) {
+  // Rate limit: 10 audits per IP per hour
+  const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
+  const { allowed, remaining } = rateLimit(`audit:${ip}`, 10, 60 * 60 * 1000);
+  if (!allowed) {
+    return NextResponse.json(
+      { error: 'Rate limit exceeded. Please try again later.', remaining: 0 },
+      { status: 429, headers: { 'X-RateLimit-Remaining': '0' } }
+    );
+  }
+
   const { searchParams } = new URL(req.url);
   const query = searchParams.get('q') || '';
 
