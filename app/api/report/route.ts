@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenAI } from '@google/genai';
 import { rateLimit } from '@/app/lib/rate-limit';
+import puppeteer from 'puppeteer-core';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -284,7 +285,7 @@ function generateReportHTML(data: {
     top: 12mm;
     left: 12mm;
     right: 12mm;
-    bottom: 5mm;
+    bottom: 18mm;
     border: 1px solid rgba(212, 207, 197, 0.65);
     pointer-events: none;
   }
@@ -1016,7 +1017,7 @@ function generateReportHTML(data: {
 </head>
 <body>
   <div class="screen-toolbar">
-    <button class="screen-button" onclick="window.print()">Download PDF</button>
+    <button class="screen-button" onclick="(function(){var u=new URL(window.location.href);u.searchParams.set('format','pdf');window.location.href=u.toString()})()">Download PDF</button>
   </div>
   <section class="page">
     <div class="page-inner">
@@ -1302,6 +1303,49 @@ function generateReportHTML(data: {
 </html>`;
 }
 
+/* ── Server-side PDF generation ────────────────────────────────────────────── */
+
+async function generatePDF(html: string): Promise<Buffer> {
+  // Use @sparticuz/chromium on Vercel (serverless), local Chrome otherwise
+  let executablePath: string;
+  try {
+    const chromium = await import('@sparticuz/chromium');
+    executablePath = await chromium.default.executablePath();
+    chromium.default.setHeadlessMode = 'shell';
+  } catch {
+    // Local dev fallback — find system Chrome/Chromium
+    const paths = [
+      '/usr/bin/google-chrome',
+      '/usr/bin/google-chrome-stable',
+      '/usr/bin/chromium-browser',
+      '/usr/bin/chromium',
+      '/snap/bin/chromium',
+    ];
+    executablePath = paths.find(p => {
+      try { require('fs').accessSync(p); return true; } catch { return false; }
+    }) || '/usr/bin/google-chrome-stable';
+  }
+
+  const browser = await puppeteer.launch({
+    executablePath,
+    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-gpu', '--disable-dev-shm-usage'],
+    headless: true,
+  });
+
+  try {
+    const page = await browser.newPage();
+    await page.setContent(html, { waitUntil: 'networkidle0', timeout: 15000 });
+    const pdf = await page.pdf({
+      format: 'A4',
+      printBackground: true,
+      margin: { top: '0', right: '0', bottom: '0', left: '0' },
+    });
+    return Buffer.from(pdf);
+  } finally {
+    await browser.close();
+  }
+}
+
 /* ── API Route ─────────────────────────────────────────────────────────────── */
 
 async function checkChatGPTVisibility(name: string, type: string, city: string) {
@@ -1401,6 +1445,16 @@ export async function GET(req: NextRequest) {
 
     // 3. Generate HTML report
     const html = generateReportHTML({ name, address, type, score: finalScore, items, ai, recommendations, date });
+
+    if (format === 'pdf') {
+      const pdfBuffer = await generatePDF(html);
+      return new NextResponse(pdfBuffer, {
+        headers: {
+          'Content-Type': 'application/pdf',
+          'Content-Disposition': `inline; filename="${name.replace(/[^a-zA-Z0-9]/g, '-')}-ReachRight-Report.pdf"`,
+        },
+      });
+    }
 
     return new NextResponse(html, {
       headers: {
