@@ -275,6 +275,7 @@ function generateReportHTML(data: {
   .page-inner {
     position: relative;
     z-index: 1;
+    padding-bottom: 20mm;
   }
 
   .topbar, .footer {
@@ -1040,6 +1041,35 @@ function generateReportHTML(data: {
         </div>
       </div>
 
+      <div class="footer">
+        <span>reachright.app</span>
+        <span>Confidential report prepared for ${safeName}</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="page">
+    <div class="page-inner">
+      <div class="topbar">
+        <div class="brand">
+          <div class="brand-mark">
+            <svg width="16" height="16" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <circle cx="16" cy="15" r="9" stroke="white" stroke-width="2" fill="none" opacity="0.35"/>
+              <circle cx="16" cy="15" r="5" stroke="white" stroke-width="2" fill="none" opacity="0.65"/>
+              <circle cx="16" cy="15" r="2" fill="white"/>
+              <path d="M20 11L25 6" stroke="white" stroke-width="2.2" stroke-linecap="round"/>
+              <path d="M25 6L25 10" stroke="white" stroke-width="2" stroke-linecap="round"/>
+              <path d="M25 6L21 6" stroke="white" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div>
+            <div class="brand-name">ReachRight</div>
+            <div class="brand-sub">Detailed checklist</div>
+          </div>
+        </div>
+        <div class="mono">Page 3 of 4</div>
+      </div>
+
       <div class="section-header">
         <h2 class="section-title">Signal-by-signal checklist</h2>
         <div class="section-copy">Every row below represents a trust or discovery signal customers see before they decide.</div>
@@ -1075,7 +1105,7 @@ function generateReportHTML(data: {
             <div class="brand-sub">Action roadmap</div>
           </div>
         </div>
-        <div class="mono">Page 3 of 3</div>
+        <div class="mono">Page 4 of 4</div>
       </div>
 
       <div class="section-header">
