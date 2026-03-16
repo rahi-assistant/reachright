@@ -900,111 +900,342 @@ function generateReportHTML(data: {
       background: var(--bg-alt);
     }
 
+    /* ── Toolbar: sticky bottom bar ── */
     .screen-toolbar {
+      position: fixed;
       top: auto;
-      right: 12px;
-      bottom: 12px;
-      left: 12px;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      padding: 12px 16px;
+      background: rgba(255,255,255,0.95);
+      backdrop-filter: blur(12px);
+      border-top: 1px solid var(--border);
       justify-content: center;
+      z-index: 50;
     }
 
     .screen-button {
-      min-height: 44px;
+      min-height: 48px;
       width: 100%;
-      max-width: 320px;
+      max-width: 360px;
+      font-size: 14px;
+      padding: 12px 20px;
     }
 
+    /* ── Page cards ── */
     .page {
-      width: calc(100vw - 16px);
+      width: 100%;
       min-height: auto;
-      margin: 8px auto;
-      padding: 18px 14px 76px;
-      border-radius: 24px;
+      margin: 0;
+      padding: 20px 16px 80px;
+      border-radius: 0;
       overflow: hidden;
       page-break-after: auto;
     }
 
+    .page + .page {
+      border-top: 6px solid var(--bg-alt);
+    }
+
     .page::before {
-      top: 10px;
-      left: 10px;
-      right: 10px;
-      bottom: 56px;
-      border-radius: 18px;
+      display: none;
     }
 
     .page-inner {
       padding-bottom: 0;
     }
 
-    .topbar,
-    .section-header,
-    .check-row,
-    .footer {
-      flex-direction: column;
-      align-items: flex-start;
+    /* ── Topbar ── */
+    .topbar {
+      flex-direction: row;
+      align-items: center;
+      gap: 8px;
     }
 
-    .topbar,
+    .brand-mark {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+    }
+
+    .brand-name {
+      font-size: 15px;
+    }
+
+    .brand-sub {
+      font-size: 8px;
+    }
+
+    .topbar .mono {
+      font-size: 10px;
+    }
+
+    /* ── Hero ── */
+    .hero {
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+
+    .hero-copy {
+      padding: 18px;
+    }
+
+    .eyebrow {
+      font-size: 9px;
+    }
+
+    .report-title {
+      font-size: 2rem;
+      margin: 8px 0;
+    }
+
+    .hero-body {
+      max-width: none;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .subject-card {
+      margin-top: 12px;
+      padding-top: 10px;
+    }
+
+    .subject-name {
+      font-size: 20px;
+    }
+
+    .subject-meta {
+      font-size: 12px;
+    }
+
+    /* ── Score card ── */
+    .score-card {
+      padding: 20px;
+      align-items: center;
+      text-align: center;
+    }
+
+    .score-ring {
+      width: 110px;
+      height: 110px;
+      margin-bottom: 14px;
+    }
+
+    .score-core {
+      width: 78px;
+      height: 78px;
+    }
+
+    .score-num {
+      font-size: 1.6rem;
+    }
+
+    .score-label {
+      font-size: 22px;
+    }
+
+    .score-body {
+      max-width: none;
+      font-size: 12px;
+    }
+
+    /* ── Stats grid ── */
+    .stats-grid {
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .stat-card {
+      min-height: 72px;
+      padding: 12px;
+    }
+
+    .stat-label {
+      font-size: 9px;
+      margin-bottom: 6px;
+    }
+
+    .stat-value {
+      font-size: 18px;
+    }
+
+    /* ── Summary card ── */
+    .summary-card {
+      margin-top: 10px;
+      padding: 12px 14px;
+    }
+
+    .summary-title {
+      font-size: 20px;
+    }
+
+    .summary-text {
+      max-width: none;
+      font-size: 12px;
+    }
+
+    /* ── Section headers ── */
     .section-header {
-      gap: 10px;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 6px;
+      margin: 16px 0 12px;
+    }
+
+    .section-title {
+      font-size: 24px;
     }
 
     .section-copy {
       max-width: none;
       text-align: left;
+      font-size: 11px;
     }
 
-    .hero,
-    .two-up,
-    .ai-model-grid,
-    .rec-grid,
-    .timeline-grid,
-    .cta-card {
+    .page-indicator {
+      font-size: 10px;
+    }
+
+    /* ── Two-up / panels ── */
+    .two-up {
       grid-template-columns: 1fr;
+      gap: 12px;
     }
 
-    .stats-grid {
-      grid-template-columns: 1fr 1fr;
+    .panel {
+      padding: 16px;
     }
 
+    .ai-title {
+      font-size: 22px;
+    }
+
+    .ai-copy {
+      font-size: 12px;
+    }
+
+    .ai-model-grid {
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+
+    .ai-model {
+      padding: 12px;
+    }
+
+    .ai-row {
+      padding: 6px 8px;
+    }
+
+    .ai-name {
+      font-size: 11px;
+    }
+
+    /* ── Risk / priority ── */
     .risk-grid {
       grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
     }
 
-    .report-title {
-      font-size: 2.5rem;
+    .risk-box {
+      padding: 10px;
     }
 
-    .hero-body,
-    .summary-text,
-    .score-body {
-      max-width: none;
+    .risk-value {
+      font-size: 24px;
     }
 
-    .score-ring {
-      width: 116px;
-      height: 116px;
+    .priority-item {
+      grid-template-columns: 36px 1fr;
+      gap: 10px;
+      padding: 12px;
     }
 
-    .score-core {
-      width: 82px;
-      height: 82px;
+    .priority-index {
+      width: 36px;
+      height: 36px;
+      font-size: 12px;
     }
 
-    .score-num {
-      font-size: 1.75rem;
+    .priority-title,
+    .rec-title,
+    .timeline-title {
+      font-size: 15px;
+    }
+
+    /* ── Checklist ── */
+    .checklist {
+      gap: 8px;
+    }
+
+    .check-item {
+      padding: 12px;
+    }
+
+    .check-row {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 4px;
+    }
+
+    .check-title {
+      font-size: 14px;
     }
 
     .check-value {
       white-space: normal;
+      font-size: 10px;
     }
 
+    .check-tip {
+      font-size: 11px;
+    }
+
+    /* ── Recs / timeline ── */
+    .rec-grid,
+    .timeline-grid {
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+
+    .rec-card,
+    .timeline-card {
+      padding: 14px;
+    }
+
+    /* ── CTA card ── */
+    .cta-card {
+      grid-template-columns: 1fr;
+      gap: 14px;
+      padding: 18px;
+    }
+
+    .cta-title {
+      font-size: 24px;
+    }
+
+    .contact-stack {
+      gap: 8px;
+    }
+
+    .contact-item {
+      padding: 10px;
+    }
+
+    /* ── Footer ── */
     .footer {
       position: static;
-      margin-top: 16px;
+      margin-top: 20px;
       gap: 6px;
       padding-top: 12px;
       width: 100%;
+      background: none;
+      font-size: 9px;
+      text-align: center;
+      flex-direction: column;
+      align-items: center;
     }
   }
 
