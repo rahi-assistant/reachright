@@ -12,6 +12,20 @@ interface AuditItem {
   tip: string;
 }
 
+interface AIVisibility {
+  found: boolean;
+  rank: number | null;
+  mentioned: string[];
+  tip: string;
+}
+
+interface ReviewSentiment {
+  sentiment: 'positive' | 'mixed' | 'negative' | 'none';
+  strengths: string[];
+  weaknesses: string[];
+  tip: string;
+}
+
 interface AuditResult {
   name: string;
   address: string;
@@ -20,6 +34,8 @@ interface AuditResult {
   score: number;
   items: AuditItem[];
   summary: string;
+  aiVisibility: AIVisibility | null;
+  reviewSentiment: ReviewSentiment | null;
 }
 
 /* ── Audit Tool (the hero) ─────────────────────────────────────────────────── */
@@ -172,6 +188,64 @@ function AuditTool() {
               </div>
             ))}
           </div>
+
+          {/* AI Visibility Detail */}
+          {selected.aiVisibility && (
+            <div className="rounded-2xl p-5 mb-6" style={{ background: 'var(--data-bg)' }}>
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-sm font-semibold" style={{ color: 'var(--data-text)' }}>AI Visibility Report</span>
+                <span className="text-[9px] font-mono px-1.5 py-0.5 rounded" style={{ background: selected.aiVisibility.found ? '#15803d25' : '#dc262625', color: selected.aiVisibility.found ? '#4ade80' : '#f87171' }}>
+                  {selected.aiVisibility.found ? `Rank #${selected.aiVisibility.rank}` : 'Not Found'}
+                </span>
+              </div>
+              <p className="text-xs leading-relaxed mb-3" style={{ color: 'var(--data-muted)' }}>
+                When someone asks AI &quot;best {selected.type?.replace(/_/g, ' ') || 'business'}s in your city,&quot; here&apos;s what it recommends:
+              </p>
+              <div className="space-y-1">
+                {selected.aiVisibility.mentioned.map((name, i) => (
+                  <div key={i} className="flex items-center gap-2 text-xs font-mono px-2 py-1 rounded"
+                    style={{
+                      background: name.toLowerCase().includes(selected.name.toLowerCase()) || selected.name.toLowerCase().includes(name.toLowerCase())
+                        ? '#15803d15' : 'transparent',
+                      color: name.toLowerCase().includes(selected.name.toLowerCase()) || selected.name.toLowerCase().includes(name.toLowerCase())
+                        ? '#4ade80' : 'var(--data-muted)'
+                    }}>
+                    <span style={{ color: 'var(--data-muted)' }}>{i + 1}.</span>
+                    <span>{name}</span>
+                    {(name.toLowerCase().includes(selected.name.toLowerCase()) || selected.name.toLowerCase().includes(name.toLowerCase())) && (
+                      <span className="text-[9px] px-1 rounded" style={{ background: '#15803d30', color: '#4ade80' }}>YOUR BUSINESS</span>
+                    )}
+                  </div>
+                ))}
+              </div>
+              {!selected.aiVisibility.found && (
+                <p className="text-xs mt-3 p-2 rounded" style={{ background: '#dc262615', color: '#fca5a5' }}>
+                  Your business is not in the AI&apos;s top recommendations. As more customers use AI to search, this gap will cost you customers.
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* Review Sentiment Detail */}
+          {selected.reviewSentiment && selected.reviewSentiment.sentiment !== 'none' && (
+            <div className="rounded-xl p-4 mb-6" style={{ background: 'var(--bg-alt)', border: '1px solid var(--border)' }}>
+              <p className="text-sm font-semibold mb-2" style={{ color: 'var(--text)' }}>What Customers Say</p>
+              {selected.reviewSentiment.strengths.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 mb-2">
+                  {selected.reviewSentiment.strengths.map((s, i) => (
+                    <span key={i} className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: '#15803d15', color: '#15803d', border: '1px solid #15803d30' }}>{s}</span>
+                  ))}
+                </div>
+              )}
+              {selected.reviewSentiment.weaknesses.length > 0 && (
+                <div className="flex flex-wrap gap-1.5">
+                  {selected.reviewSentiment.weaknesses.map((w, i) => (
+                    <span key={i} className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: '#dc262610', color: '#dc2626', border: '1px solid #dc262625' }}>{w}</span>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* CTA */}
           <div className="rounded-2xl p-6 text-center" style={{ background: 'var(--accent)', color: 'white' }}>
