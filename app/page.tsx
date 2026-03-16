@@ -247,17 +247,28 @@ function AuditTool() {
             </div>
           )}
 
-          {/* CTA */}
-          <div className="rounded-2xl p-6 text-center" style={{ background: 'var(--accent)', color: 'white' }}>
-            <p className="text-lg font-semibold">Want us to fix this for you?</p>
-            <p className="text-sm mt-1 opacity-80">We'll build your website, optimize your Google listing, and get you more customers.</p>
+          {/* Download + CTA */}
+          <div className="flex gap-3 mb-6">
+            <a
+              href={`/api/report?q=${encodeURIComponent(selected.name + ' ' + selected.address.split(',').slice(-3).join(','))}&format=html`}
+              target="_blank"
+              className="flex-1 text-center py-3 rounded-xl font-semibold text-sm border transition-all"
+              style={{ borderColor: 'var(--border-strong)', color: 'var(--text)' }}>
+              Download Full Report
+            </a>
             <a
               href={`https://wa.me/917439677931?text=${encodeURIComponent(`Hi, I just checked my business "${selected.name}" on ReachRight. Score: ${selected.score}/100. I'd like help improving my online presence.`)}`}
               target="_blank"
-              className="inline-block mt-4 px-6 py-2.5 rounded-xl font-semibold text-sm transition-all"
-              style={{ background: 'white', color: 'var(--accent)' }}>
+              className="flex-1 text-center py-3 rounded-xl font-semibold text-sm text-white transition-all"
+              style={{ background: 'var(--accent)' }}>
               Talk to us on WhatsApp →
             </a>
+          </div>
+
+          {/* CTA card */}
+          <div className="rounded-2xl p-6 text-center" style={{ background: 'var(--accent)', color: 'white' }}>
+            <p className="text-lg font-semibold">Want us to fix this for you?</p>
+            <p className="text-sm mt-1 opacity-80">We build your website, optimize your Google listing, and make AI recommend your business.</p>
           </div>
         </div>
       )}
