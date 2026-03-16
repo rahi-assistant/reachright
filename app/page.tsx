@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 
-// ── Scanner Demo Component ─────────────────────────────────────────────────────
+/* ── Types ─────────────────────────────────────────────────────────────────── */
 
 interface ScanResult {
   name: string;
@@ -14,280 +14,298 @@ interface ScanResult {
   issues: string[];
 }
 
-function LiveDemo() {
+/* ── Scanner Demo ──────────────────────────────────────────────────────────── */
+
+function Scanner() {
   const [city, setCity] = useState('Kolkata');
   const [type, setType] = useState('restaurants');
-  const [results, setResults] = useState<ScanResult[] | null>(null);
+  const [results, setResults] = useState<ScanResult[]>([]);
   const [loading, setLoading] = useState(false);
-  const [scanned, setScanned] = useState(false);
+  const [done, setDone] = useState(false);
 
-  const businessTypes = [
-    'restaurants', 'salons', 'hotels', 'gyms', 'clinics',
-    'dentists', 'bakeries', 'boutiques', 'photographers', 'spas',
-  ];
+  const types = ['restaurants','salons','hotels','gyms','clinics','dentists','bakeries','boutiques','photographers','spas'];
 
-  async function runScan() {
-    setLoading(true);
-    setScanned(false);
+  async function scan() {
+    setLoading(true); setDone(false);
     try {
       const res = await fetch(`/api/scan?city=${encodeURIComponent(city)}&type=${encodeURIComponent(type)}`);
       const data = await res.json();
       setResults(data.results || []);
-      setScanned(true);
-    } catch {
-      setResults([]);
-      setScanned(true);
-    }
-    setLoading(false);
+    } catch { setResults([]); }
+    setDone(true); setLoading(false);
   }
 
-  const scoreColor = (s: number) =>
-    s >= 40 ? 'text-[#f43f5e]' : s >= 20 ? 'text-[#f59e0b]' : 'text-[#10b981]';
-  const scoreBarColor = (s: number) =>
-    s >= 40 ? 'bg-[#f43f5e]' : s >= 20 ? 'bg-[#f59e0b]' : 'bg-[#10b981]';
+  const barColor = (s: number) => s >= 40 ? '#dc2626' : s >= 20 ? '#ca8a04' : '#15803d';
 
   return (
-    <div className="w-full">
-      <div className="flex flex-col sm:flex-row gap-3 mb-6">
-        <input
-          type="text"
-          value={city}
-          onChange={e => setCity(e.target.value)}
-          placeholder="City name..."
-          className="flex-1 bg-[var(--surface)] border border-[var(--border)] rounded-xl px-4 py-3 text-sm text-[var(--foreground)] placeholder:text-[var(--muted)] focus:outline-none focus:border-[var(--accent)] transition-colors"
-        />
-        <select
-          value={type}
-          onChange={e => setType(e.target.value)}
-          className="bg-[var(--surface)] border border-[var(--border)] rounded-xl px-4 py-3 text-sm text-[var(--foreground)] focus:outline-none focus:border-[var(--accent)] transition-colors"
-        >
-          {businessTypes.map(t => (
-            <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>
-          ))}
-        </select>
-        <button
-          onClick={runScan}
-          disabled={loading || !city}
-          className="px-6 py-3 bg-[var(--accent)] hover:bg-[var(--accent-light)] disabled:opacity-50 text-white font-semibold text-sm rounded-xl transition-all cursor-pointer"
-        >
-          {loading ? 'Scanning...' : 'Scan Now'}
-        </button>
+    <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--data-bg)' }}>
+      {/* Terminal-style header */}
+      <div className="px-5 py-3 flex items-center gap-2 border-b" style={{ borderColor: 'var(--data-border)' }}>
+        <div className="flex gap-1.5">
+          <div className="w-2.5 h-2.5 rounded-full bg-[#ff5f57]" />
+          <div className="w-2.5 h-2.5 rounded-full bg-[#febc2e]" />
+          <div className="w-2.5 h-2.5 rounded-full bg-[#28c840]" />
+        </div>
+        <span className="text-xs font-mono ml-2" style={{ color: 'var(--data-muted)' }}>reachright scanner v1.0</span>
       </div>
 
+      {/* Search controls */}
+      <div className="p-5">
+        <div className="flex flex-col sm:flex-row gap-2.5">
+          <div className="flex-1 relative">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-mono" style={{ color: 'var(--data-muted)' }}>city:</span>
+            <input
+              type="text" value={city} onChange={e => setCity(e.target.value)}
+              className="w-full rounded-lg px-3 pl-12 py-2.5 text-sm font-mono border focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
+              style={{ background: 'var(--data-surface)', borderColor: 'var(--data-border)', color: 'var(--data-text)' }}
+            />
+          </div>
+          <div className="relative">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-mono" style={{ color: 'var(--data-muted)' }}>type:</span>
+            <select value={type} onChange={e => setType(e.target.value)}
+              className="rounded-lg pl-12 pr-4 py-2.5 text-sm font-mono border focus:outline-none appearance-none cursor-pointer"
+              style={{ background: 'var(--data-surface)', borderColor: 'var(--data-border)', color: 'var(--data-text)' }}>
+              {types.map(t => <option key={t} value={t}>{t}</option>)}
+            </select>
+          </div>
+          <button onClick={scan} disabled={loading || !city}
+            className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition-all disabled:opacity-40 cursor-pointer"
+            style={{ background: 'var(--accent)' }}>
+            {loading ? '● Scanning...' : '→ Scan'}
+          </button>
+        </div>
+      </div>
+
+      {/* Results */}
       {loading && (
-        <div className="text-center py-12">
-          <div className="inline-block w-8 h-8 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin" />
-          <p className="mt-3 text-sm text-[var(--muted)]">Scanning {type} in {city}...</p>
+        <div className="text-center py-10">
+          <div className="inline-block w-6 h-6 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: 'var(--accent)', borderTopColor: 'transparent' }} />
+          <p className="mt-2 text-xs font-mono" style={{ color: 'var(--data-muted)' }}>querying google maps for {type} in {city}...</p>
         </div>
       )}
 
-      {scanned && results && results.length > 0 && (
-        <div className="space-y-2">
-          <p className="text-xs text-[var(--muted)] mb-3 font-mono">
-            Found {results.length} businesses — sorted by opportunity score
-          </p>
-          {results.map((r, i) => (
-            <div
-              key={i}
-              className="bg-[var(--surface)] border border-[var(--border)] rounded-xl p-4 hover:border-[var(--accent)]/30 transition-colors animate-fade-up"
-              style={{ animationDelay: `${i * 0.05}s` }}
-            >
-              <div className="flex items-start justify-between gap-4">
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h3 className="text-sm font-semibold text-[var(--foreground)] truncate">{r.name}</h3>
-                    <span className={`text-xs font-mono font-bold ${scoreColor(r.score)}`}>{r.score}</span>
-                  </div>
-                  <p className="text-xs text-[var(--muted)] truncate">{r.address}</p>
-                  <div className="flex items-center gap-3 mt-2 text-xs text-[var(--muted)]">
-                    <span>★ {r.rating || '—'}</span>
-                    <span>{r.reviews} reviews</span>
-                    <span className={r.website === 'NONE' ? 'text-[#f43f5e] font-semibold' : ''}>
-                      {r.website === 'NONE' ? 'No website' : 'Has website'}
-                    </span>
+      {done && results.length > 0 && (
+        <div className="px-5 pb-5">
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-xs font-mono" style={{ color: 'var(--data-muted)' }}>
+              {results.length} results — sorted by opportunity score ↓
+            </p>
+            <p className="text-xs font-mono" style={{ color: 'var(--data-muted)' }}>
+              {results.filter(r => r.website === 'NONE').length} without website
+            </p>
+          </div>
+
+          {/* Table header */}
+          <div className="grid grid-cols-[1fr_60px_60px_80px] sm:grid-cols-[1fr_80px_80px_100px] gap-2 px-3 py-2 text-[10px] font-mono uppercase tracking-wider" style={{ color: 'var(--data-muted)' }}>
+            <span>Business</span>
+            <span className="text-right">Rating</span>
+            <span className="text-right">Reviews</span>
+            <span className="text-right">Score</span>
+          </div>
+
+          <div className="space-y-1">
+            {results.map((r, i) => (
+              <div key={i}
+                className="grid grid-cols-[1fr_60px_60px_80px] sm:grid-cols-[1fr_80px_80px_100px] gap-2 items-center px-3 py-2.5 rounded-lg transition-colors animate-reveal"
+                style={{ background: i % 2 === 0 ? 'var(--data-surface)' : 'transparent', animationDelay: `${i * 0.03}s` }}>
+                <div className="min-w-0">
+                  <p className="text-sm font-medium truncate" style={{ color: 'var(--data-text)' }}>{r.name}</p>
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    {r.website === 'NONE' && (
+                      <span className="text-[9px] px-1.5 py-0.5 rounded font-mono font-bold" style={{ background: '#dc262620', color: '#f87171' }}>NO SITE</span>
+                    )}
+                    {r.issues.slice(0, 2).map((issue, j) => (
+                      <span key={j} className="text-[9px] px-1.5 py-0.5 rounded font-mono" style={{ background: 'var(--data-border)', color: 'var(--data-muted)' }}>{issue}</span>
+                    ))}
                   </div>
                 </div>
-                <div className="w-20 flex-shrink-0">
-                  <div className="w-full h-2 bg-[var(--border)] rounded-full overflow-hidden">
-                    <div className={`h-full rounded-full score-bar ${scoreBarColor(r.score)}`} style={{ width: `${Math.min(r.score, 100)}%` }} />
+                <span className="text-right text-sm font-mono" style={{ color: r.rating >= 4 ? '#4ade80' : r.rating >= 3 ? '#fbbf24' : '#f87171' }}>
+                  {r.rating || '—'}
+                </span>
+                <span className="text-right text-sm font-mono" style={{ color: 'var(--data-muted)' }}>
+                  {r.reviews.toLocaleString()}
+                </span>
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--data-border)' }}>
+                    <div className="h-full rounded-full score-bar" style={{ width: `${Math.min(r.score, 100)}%`, background: barColor(r.score) }} />
                   </div>
-                  <p className="text-[10px] text-[var(--muted)] text-center mt-1">opportunity</p>
+                  <span className="text-xs font-mono font-bold w-6 text-right" style={{ color: barColor(r.score) }}>{r.score}</span>
                 </div>
               </div>
-              {r.issues.length > 0 && (
-                <div className="flex flex-wrap gap-1.5 mt-3">
-                  {r.issues.map((issue, j) => (
-                    <span key={j} className="text-[10px] px-2 py-0.5 rounded-full bg-[var(--surface-2)] border border-[var(--border)] text-[var(--muted)]">{issue}</span>
-                  ))}
-                </div>
-              )}
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       )}
 
-      {scanned && results && results.length === 0 && (
-        <p className="text-center py-12 text-sm text-[var(--muted)]">No results found. Try a different city or business type.</p>
+      {done && results.length === 0 && (
+        <p className="text-center py-10 text-sm font-mono" style={{ color: 'var(--data-muted)' }}>No results. Try a different city or type.</p>
       )}
     </div>
   );
 }
 
-// ── Main Page ──────────────────────────────────────────────────────────────────
+/* ── Page ───────────────────────────────────────────────────────────────────── */
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-grid">
+    <div className="min-h-screen" style={{ background: 'var(--bg)' }}>
       {/* Nav */}
-      <nav className="fixed top-0 w-full z-50 border-b border-[var(--border)] bg-[var(--background)]/80 backdrop-blur-xl">
-        <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-[var(--accent)] flex items-center justify-center">
+      <nav className="sticky top-0 z-50 backdrop-blur-xl border-b" style={{ background: 'var(--bg)', borderColor: 'var(--border)', backgroundColor: 'rgba(250,248,245,0.85)' }}>
+        <div className="max-w-5xl mx-auto px-6 h-14 flex items-center justify-between">
+          <a href="/" className="flex items-center gap-2.5">
+            <div className="w-7 h-7 rounded-md flex items-center justify-center" style={{ background: 'var(--accent)' }}>
               <span className="text-white font-bold text-xs">R</span>
             </div>
-            <span className="font-semibold text-[var(--foreground)] tracking-tight">ReachRight</span>
-          </div>
-          <div className="flex items-center gap-6 text-sm">
-            <a href="#how" className="text-[var(--muted)] hover:text-[var(--foreground)] transition-colors hidden sm:block">How it works</a>
-            <a href="#demo" className="text-[var(--muted)] hover:text-[var(--foreground)] transition-colors hidden sm:block">Live Demo</a>
-            <a href="#pricing" className="text-[var(--muted)] hover:text-[var(--foreground)] transition-colors hidden sm:block">Pricing</a>
-            <a href="https://wa.me/918777685015?text=Hi%2C%20I%20want%20a%20free%20web%20presence%20audit" target="_blank"
-              className="px-4 py-1.5 bg-[var(--accent)] hover:bg-[var(--accent-light)] text-white text-sm font-medium rounded-lg transition-all">
+            <span className="font-semibold text-[15px] tracking-tight" style={{ color: 'var(--text)' }}>ReachRight</span>
+          </a>
+          <div className="flex items-center gap-5 text-[13px]">
+            <a href="#scanner" className="hidden sm:block transition-colors" style={{ color: 'var(--text-secondary)' }}>Scanner</a>
+            <a href="#how" className="hidden sm:block transition-colors" style={{ color: 'var(--text-secondary)' }}>How it works</a>
+            <a href="#pricing" className="hidden sm:block transition-colors" style={{ color: 'var(--text-secondary)' }}>Pricing</a>
+            <a href="https://wa.me/918777685015?text=Hi%2C%20I%20want%20a%20free%20audit%20for%20my%20business" target="_blank"
+              className="px-4 py-1.5 text-white text-[13px] font-semibold rounded-lg transition-all"
+              style={{ background: 'var(--accent)' }}>
               Free Audit
             </a>
           </div>
         </div>
       </nav>
 
-      {/* Hero */}
-      <section className="pt-32 pb-20 px-6">
-        <div className="max-w-4xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-[var(--border)] bg-[var(--surface)] text-xs text-[var(--muted)] mb-6 animate-fade-up">
-            <span className="w-1.5 h-1.5 rounded-full bg-[var(--success)] animate-pulse" />
-            Scanning 321 businesses in Kolkata
+      {/* Hero — editorial style, serif headline */}
+      <section className="pt-20 sm:pt-28 pb-16 px-6 dot-grid relative">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex items-center gap-2 mb-6 animate-reveal">
+            <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: 'var(--success)' }} />
+            <span className="text-xs font-mono tracking-wide" style={{ color: 'var(--text-muted)' }}>321 businesses scanned in Kolkata today</span>
           </div>
-          <h1 className="text-4xl sm:text-6xl font-bold tracking-tight text-[var(--foreground)] leading-[1.1] animate-fade-up" style={{ animationDelay: '0.1s' }}>
-            Your customers are<br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--accent)] to-[var(--accent-light)]">searching for you</span>
-            <br />online.
+
+          <h1 className="font-display text-[clamp(2.5rem,6vw,4.5rem)] leading-[1.08] tracking-tight animate-reveal" style={{ animationDelay: '0.06s', color: 'var(--text)' }}>
+            Half the businesses<br />in your city are<br />
+            <em className="not-italic" style={{ color: 'var(--accent)' }}>invisible online.</em>
           </h1>
-          <p className="mt-6 text-lg text-[var(--muted)] max-w-2xl mx-auto leading-relaxed animate-fade-up" style={{ animationDelay: '0.2s' }}>
-            50% of local businesses in Kolkata have no website. We use AI to find them, build their online presence, and bring them more customers.
+
+          <p className="mt-6 text-lg leading-relaxed max-w-xl animate-reveal" style={{ animationDelay: '0.12s', color: 'var(--text-secondary)' }}>
+            We scan Google Maps, find businesses with no website or weak presence, and help them get found by customers who are already searching.
           </p>
-          <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3 animate-fade-up" style={{ animationDelay: '0.3s' }}>
-            <a href="#demo" className="px-6 py-3 bg-[var(--accent)] hover:bg-[var(--accent-light)] text-white font-semibold rounded-xl transition-all glow-accent">
-              Try Live Scanner
+
+          <div className="mt-8 flex flex-wrap gap-3 animate-reveal" style={{ animationDelay: '0.18s' }}>
+            <a href="#scanner"
+              className="px-5 py-2.5 text-white font-semibold text-sm rounded-lg transition-all hover:opacity-90"
+              style={{ background: 'var(--accent)' }}>
+              Try the Scanner ↓
             </a>
-            <a href="https://wa.me/918777685015?text=Hi%2C%20I%20want%20a%20free%20web%20presence%20audit" target="_blank"
-              className="px-6 py-3 border border-[var(--border)] hover:border-[var(--accent)] text-[var(--foreground)] font-semibold rounded-xl transition-all">
-              Free Audit →
+            <a href="https://wa.me/918777685015?text=Hi%2C%20I%20want%20a%20free%20audit" target="_blank"
+              className="px-5 py-2.5 font-semibold text-sm rounded-lg border transition-all hover:bg-[var(--bg-alt)]"
+              style={{ borderColor: 'var(--border-strong)', color: 'var(--text)' }}>
+              Get Free Audit →
             </a>
           </div>
-        </div>
-      </section>
 
-      {/* Stats */}
-      <section className="border-y border-[var(--border)] bg-[var(--surface)]/50">
-        <div className="max-w-6xl mx-auto px-6 py-8 grid grid-cols-2 sm:grid-cols-4 gap-6 text-center stagger">
-          {[
-            { value: '321', label: 'Businesses Scanned', sub: 'in Kolkata' },
-            { value: '27%', label: 'Have No Website', sub: '88 businesses' },
-            { value: '50%', label: 'Weak Presence', sub: 'score > 20' },
-            { value: '16', label: 'Categories', sub: 'restaurants to spas' },
-          ].map(s => (
-            <div key={s.label}>
-              <p className="text-3xl font-bold text-[var(--foreground)] font-mono">{s.value}</p>
-              <p className="text-sm text-[var(--muted)] mt-1">{s.label}</p>
-              <p className="text-xs text-[var(--muted)]/60">{s.sub}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* How it works */}
-      <section id="how" className="py-20 px-6">
-        <div className="max-w-6xl mx-auto">
-          <h2 className="text-3xl font-bold text-center text-[var(--foreground)] mb-12">How it works</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 stagger">
+          {/* Quick stats — newspaper-style data strip */}
+          <div className="mt-14 grid grid-cols-4 gap-px rounded-xl overflow-hidden animate-reveal" style={{ animationDelay: '0.24s', background: 'var(--border)' }}>
             {[
-              { step: '01', title: 'We Scan', desc: 'Our AI scans Google Maps to find businesses with weak online presence — no website, poor reviews, missing photos.', icon: '🔍' },
-              { step: '02', title: 'We Build', desc: 'We create a professional website, optimize your Google Business Profile, and set up your digital presence in days.', icon: '🛠️' },
-              { step: '03', title: 'You Grow', desc: 'More customers find you online. Better reviews. More walk-ins. We track everything with monthly reports.', icon: '📈' },
-            ].map(item => (
-              <div key={item.step} className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-6 hover:border-[var(--accent)]/30 transition-all">
-                <div className="flex items-center gap-3 mb-4">
-                  <span className="text-2xl">{item.icon}</span>
-                  <span className="text-xs font-mono text-[var(--accent)]">STEP {item.step}</span>
-                </div>
-                <h3 className="text-lg font-semibold text-[var(--foreground)] mb-2">{item.title}</h3>
-                <p className="text-sm text-[var(--muted)] leading-relaxed">{item.desc}</p>
+              { num: '321', label: 'Scanned' },
+              { num: '88', label: 'No Website' },
+              { num: '27%', label: 'Missing Online' },
+              { num: '16', label: 'Categories' },
+            ].map(s => (
+              <div key={s.label} className="py-4 text-center" style={{ background: 'var(--surface)' }}>
+                <p className="text-2xl sm:text-3xl font-mono font-bold" style={{ color: 'var(--text)' }}>{s.num}</p>
+                <p className="text-[10px] font-mono uppercase tracking-wider mt-1" style={{ color: 'var(--text-muted)' }}>{s.label}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Live Demo */}
-      <section id="demo" className="py-20 px-6 bg-[var(--surface)]/30">
+      {/* Scanner — the hero product */}
+      <section id="scanner" className="py-16 px-6" style={{ background: 'var(--bg-alt)' }}>
         <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-10">
-            <h2 className="text-3xl font-bold text-[var(--foreground)]">Live Scanner</h2>
-            <p className="mt-2 text-[var(--muted)]">See which businesses near you need help — powered by Google Maps AI.</p>
+          <div className="mb-8">
+            <h2 className="font-display text-3xl sm:text-4xl" style={{ color: 'var(--text)' }}>Live Scanner</h2>
+            <p className="mt-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
+              Enter any city. See which businesses are invisible to their customers.
+            </p>
           </div>
-          <LiveDemo />
+          <Scanner />
+        </div>
+      </section>
+
+      {/* How it works — clean editorial */}
+      <section id="how" className="py-20 px-6">
+        <div className="max-w-4xl mx-auto">
+          <h2 className="font-display text-3xl sm:text-4xl mb-12" style={{ color: 'var(--text)' }}>How it works</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 stagger">
+            {[
+              { num: '01', title: 'Scan', body: 'Our AI scans Google Maps across your city. We find every business with no website, poor ratings, missing photos, or incomplete profiles.' },
+              { num: '02', title: 'Build', body: 'We create a professional website, optimize your Google Business listing, add photos, fix your hours, and set up WhatsApp ordering.' },
+              { num: '03', title: 'Grow', body: 'Customers find you when they search. More walk-ins, more calls, more orders. We send you a monthly report showing the growth.' },
+            ].map(step => (
+              <div key={step.num}>
+                <span className="text-xs font-mono font-bold" style={{ color: 'var(--accent)' }}>{step.num}</span>
+                <h3 className="text-xl font-semibold mt-2 mb-3" style={{ color: 'var(--text)' }}>{step.title}</h3>
+                <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{step.body}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Social proof / data callout */}
+      <section className="py-16 px-6 border-y relative noise" style={{ background: 'var(--data-bg)', borderColor: 'var(--data-border)' }}>
+        <div className="max-w-4xl mx-auto text-center relative z-10">
+          <p className="font-display text-3xl sm:text-4xl italic" style={{ color: 'var(--data-text)' }}>
+            &ldquo;Peter Cat has 39,806 Google reviews<br />and no website.&rdquo;
+          </p>
+          <p className="mt-4 text-sm font-mono" style={{ color: 'var(--data-muted)' }}>
+            One of Kolkata&apos;s most famous restaurants. Found by our scanner.
+          </p>
         </div>
       </section>
 
       {/* Pricing */}
       <section id="pricing" className="py-20 px-6">
-        <div className="max-w-6xl mx-auto">
-          <h2 className="text-3xl font-bold text-center text-[var(--foreground)] mb-4">Simple Pricing</h2>
-          <p className="text-center text-[var(--muted)] mb-12">Start free. Pay only when you see results.</p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 stagger">
+        <div className="max-w-4xl mx-auto">
+          <h2 className="font-display text-3xl sm:text-4xl mb-3" style={{ color: 'var(--text)' }}>Pricing</h2>
+          <p className="text-sm mb-12" style={{ color: 'var(--text-secondary)' }}>Start with a free audit. Upgrade when you see the results.</p>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-px rounded-2xl overflow-hidden stagger" style={{ background: 'var(--border)' }}>
             {[
               {
-                name: 'Starter', price: 'Free', period: '', desc: 'See where you stand',
-                features: ['Web presence audit', 'Google profile review', 'Competitor comparison', 'Improvement checklist'],
-                cta: 'Get Free Audit',
-                href: 'https://wa.me/918777685015?text=Hi%2C%20I%20want%20a%20free%20web%20presence%20audit',
-                popular: false,
+                name: 'Audit', price: 'Free', desc: 'See where you stand',
+                features: ['Full web presence report', 'Google profile review', 'Competitor comparison', '5 actionable fixes'],
+                cta: 'Get Free Audit', primary: false,
               },
               {
-                name: 'Growth', price: '₹4,999', period: '/month', desc: 'Full digital presence',
-                features: ['Professional website', 'Google Business optimization', 'Monthly SEO updates', 'Review management', 'WhatsApp integration', 'Monthly performance report'],
-                cta: 'Get Started',
-                href: 'https://wa.me/918777685015?text=Hi%2C%20I%27m%20interested%20in%20the%20Growth%20plan',
-                popular: true,
+                name: 'Growth', price: '₹4,999/mo', desc: 'Complete digital presence',
+                features: ['Professional website', 'Google Business setup', 'Monthly SEO updates', 'Review management', 'WhatsApp integration', 'Monthly report'],
+                cta: 'Start Growing', primary: true,
               },
               {
-                name: 'For Agencies', price: '₹9,999', period: '/month', desc: 'White-label lead gen',
-                features: ['50 qualified leads/week', 'Auto-generated demos', 'Personalized outreach', 'Your branding', 'API access', 'Priority support'],
-                cta: 'Contact Us',
-                href: 'https://wa.me/918777685015?text=Hi%2C%20I%27m%20a%20digital%20agency%20interested%20in%20ReachRight',
-                popular: false,
+                name: 'Agency', price: '₹9,999/mo', desc: 'For marketing agencies',
+                features: ['50 leads per week', 'Auto-generated demos', 'Custom outreach', 'White-label ready', 'API access', 'Priority support'],
+                cta: 'Contact Us', primary: false,
               },
             ].map(plan => (
-              <div key={plan.name} className={`relative bg-[var(--surface)] border rounded-2xl p-6 flex flex-col ${plan.popular ? 'border-[var(--accent)] glow-accent' : 'border-[var(--border)]'}`}>
-                {plan.popular && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 bg-[var(--accent)] text-white text-xs font-semibold rounded-full">Most Popular</div>
-                )}
-                <div className="mb-6">
-                  <h3 className="text-lg font-semibold text-[var(--foreground)]">{plan.name}</h3>
-                  <p className="text-sm text-[var(--muted)] mt-1">{plan.desc}</p>
-                  <div className="mt-4">
-                    <span className="text-3xl font-bold text-[var(--foreground)]">{plan.price}</span>
-                    <span className="text-sm text-[var(--muted)]">{plan.period}</span>
-                  </div>
+              <div key={plan.name} className="p-6 flex flex-col" style={{ background: plan.primary ? 'var(--accent-soft)' : 'var(--surface)' }}>
+                <div className="mb-5">
+                  <p className="text-xs font-mono uppercase tracking-wider mb-2" style={{ color: plan.primary ? 'var(--accent)' : 'var(--text-muted)' }}>{plan.name}</p>
+                  <p className="text-2xl font-bold" style={{ color: 'var(--text)' }}>{plan.price}</p>
+                  <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>{plan.desc}</p>
                 </div>
-                <ul className="space-y-2.5 flex-1 mb-6">
+                <ul className="space-y-2 flex-1 mb-6">
                   {plan.features.map(f => (
-                    <li key={f} className="flex items-start gap-2 text-sm text-[var(--muted)]">
-                      <span className="text-[var(--success)] mt-0.5">✓</span>{f}
+                    <li key={f} className="flex items-start gap-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
+                      <span style={{ color: 'var(--success)' }}>✓</span>{f}
                     </li>
                   ))}
                 </ul>
-                <a href={plan.href} target="_blank"
-                  className={`block text-center py-2.5 rounded-xl font-semibold text-sm transition-all ${plan.popular ? 'bg-[var(--accent)] hover:bg-[var(--accent-light)] text-white' : 'border border-[var(--border)] hover:border-[var(--accent)] text-[var(--foreground)]'}`}>
+                <a href={`https://wa.me/918777685015?text=Hi%2C%20interested%20in%20${plan.name}%20plan`} target="_blank"
+                  className="block text-center py-2.5 rounded-lg font-semibold text-sm transition-all"
+                  style={plan.primary
+                    ? { background: 'var(--accent)', color: 'white' }
+                    : { border: '1px solid var(--border-strong)', color: 'var(--text)' }
+                  }>
                   {plan.cta}
                 </a>
               </div>
@@ -296,19 +314,36 @@ export default function Home() {
         </div>
       </section>
 
+      {/* CTA */}
+      <section className="py-16 px-6" style={{ background: 'var(--bg-alt)' }}>
+        <div className="max-w-2xl mx-auto text-center">
+          <h2 className="font-display text-3xl sm:text-4xl mb-4" style={{ color: 'var(--text)' }}>
+            Your customers are searching.<br />Can they find you?
+          </h2>
+          <p className="text-sm mb-6" style={{ color: 'var(--text-secondary)' }}>
+            Get a free audit of your business&apos;s online presence in 24 hours.
+          </p>
+          <a href="https://wa.me/918777685015?text=Hi%2C%20I%20want%20a%20free%20audit%20for%20my%20business" target="_blank"
+            className="inline-block px-6 py-3 text-white font-semibold rounded-lg transition-all hover:opacity-90"
+            style={{ background: 'var(--accent)' }}>
+            Get Free Audit on WhatsApp →
+          </a>
+        </div>
+      </section>
+
       {/* Footer */}
-      <footer className="border-t border-[var(--border)] py-8 px-6">
-        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+      <footer className="border-t py-8 px-6" style={{ borderColor: 'var(--border)' }}>
+        <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-md bg-[var(--accent)] flex items-center justify-center">
-              <span className="text-white font-bold text-[10px]">R</span>
+            <div className="w-5 h-5 rounded flex items-center justify-center" style={{ background: 'var(--accent)' }}>
+              <span className="text-white font-bold text-[9px]">R</span>
             </div>
-            <span className="text-sm text-[var(--muted)]">ReachRight</span>
+            <span className="text-sm" style={{ color: 'var(--text-muted)' }}>ReachRight</span>
           </div>
-          <p className="text-xs text-[var(--muted)]">AI-powered growth for local businesses.</p>
-          <div className="flex items-center gap-4 text-xs text-[var(--muted)]">
-            <a href="https://wa.me/918777685015" target="_blank" className="hover:text-[var(--foreground)]">WhatsApp</a>
-            <a href="mailto:hello@reachright.app" className="hover:text-[var(--foreground)]">Email</a>
+          <p className="text-xs" style={{ color: 'var(--text-muted)' }}>AI-powered growth for local businesses</p>
+          <div className="flex items-center gap-4 text-xs" style={{ color: 'var(--text-muted)' }}>
+            <a href="https://wa.me/918777685015" target="_blank" className="hover:underline">WhatsApp</a>
+            <a href="mailto:hello@reachright.app" className="hover:underline">Email</a>
           </div>
         </div>
       </footer>

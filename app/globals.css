@@ -1,86 +1,88 @@
 @import "tailwindcss";
 
 :root {
-  --background: #06060a;
-  --foreground: #e8e8ed;
-  --accent: #6366f1;
-  --accent-light: #818cf8;
-  --surface: #0f0f15;
-  --surface-2: #16161f;
-  --border: #1e1e2a;
-  --muted: #71717a;
-  --success: #10b981;
-  --danger: #f43f5e;
-  --warning: #f59e0b;
+  /* Warm cream palette — editorial, not generic SaaS */
+  --bg: #faf8f5;
+  --bg-alt: #f2efe9;
+  --surface: #ffffff;
+  --border: #e8e4dd;
+  --border-strong: #d4cfc5;
+  --text: #1a1814;
+  --text-secondary: #6b6560;
+  --text-muted: #9c9590;
+  --accent: #c2410c;        /* warm orange-red — distinctive, not indigo */
+  --accent-hover: #a83509;
+  --accent-soft: #fff2ec;
+  --success: #15803d;
+  --danger: #dc2626;
+  --warning: #ca8a04;
+  --data-bg: #1a1814;       /* dark bg for data/scanner sections */
+  --data-surface: #252220;
+  --data-border: #3a3632;
+  --data-text: #f2efe9;
+  --data-muted: #9c9590;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-background: var(--bg);
+  --color-foreground: var(--text);
+  --font-sans: var(--font-body);
+  --font-mono: var(--font-mono);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-sans), system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body), system-ui, sans-serif;
 }
 
-/* Smooth scrolling */
+/* Serif display headings */
+.font-display {
+  font-family: var(--font-display), Georgia, serif;
+}
+
 html {
   scroll-behavior: smooth;
 }
 
-/* Gradient glow effect */
-.glow-accent {
-  box-shadow: 0 0 60px -12px rgba(99, 102, 241, 0.3);
-}
-
-/* Animated gradient border */
-.border-gradient {
-  position: relative;
-}
-.border-gradient::before {
-  content: '';
-  position: absolute;
-  inset: -1px;
-  border-radius: inherit;
-  background: linear-gradient(135deg, var(--accent), transparent 40%, transparent 60%, var(--accent-light));
-  z-index: -1;
-  opacity: 0.5;
-}
-
-/* Grid background pattern */
-.bg-grid {
-  background-image:
-    linear-gradient(rgba(99, 102, 241, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(99, 102, 241, 0.03) 1px, transparent 1px);
-  background-size: 64px 64px;
-}
-
-/* Score bar animation */
+/* Animated score bar */
 @keyframes score-fill {
   from { width: 0%; }
 }
 .score-bar {
-  animation: score-fill 1s ease-out;
+  animation: score-fill 0.8s ease-out;
 }
 
-/* Fade in */
-@keyframes fade-up {
-  from { opacity: 0; transform: translateY(20px); }
+/* Reveal animation */
+@keyframes reveal {
+  from { opacity: 0; transform: translateY(16px); }
   to { opacity: 1; transform: translateY(0); }
 }
-.animate-fade-up {
-  animation: fade-up 0.6s ease-out both;
+.animate-reveal {
+  animation: reveal 0.5s ease-out both;
 }
 
-/* Stagger children */
-.stagger > * { animation: fade-up 0.5s ease-out both; }
-.stagger > *:nth-child(1) { animation-delay: 0.05s; }
-.stagger > *:nth-child(2) { animation-delay: 0.1s; }
-.stagger > *:nth-child(3) { animation-delay: 0.15s; }
-.stagger > *:nth-child(4) { animation-delay: 0.2s; }
-.stagger > *:nth-child(5) { animation-delay: 0.25s; }
-.stagger > *:nth-child(6) { animation-delay: 0.3s; }
+/* Stagger children reveals */
+.stagger > * { animation: reveal 0.45s ease-out both; }
+.stagger > *:nth-child(1) { animation-delay: 0.04s; }
+.stagger > *:nth-child(2) { animation-delay: 0.08s; }
+.stagger > *:nth-child(3) { animation-delay: 0.12s; }
+.stagger > *:nth-child(4) { animation-delay: 0.16s; }
+.stagger > *:nth-child(5) { animation-delay: 0.2s; }
+.stagger > *:nth-child(6) { animation-delay: 0.24s; }
+
+/* Noise texture overlay */
+.noise::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Dot grid pattern for hero */
+.dot-grid {
+  background-image: radial-gradient(circle, var(--border) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
