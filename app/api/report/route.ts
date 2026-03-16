@@ -267,7 +267,10 @@ function generateReportHTML(data: {
   .page::before {
     content: '';
     position: absolute;
-    inset: 12mm;
+    top: 12mm;
+    left: 12mm;
+    right: 12mm;
+    bottom: 24mm;
     border: 1px solid rgba(212, 207, 197, 0.65);
     pointer-events: none;
   }
@@ -287,13 +290,13 @@ function generateReportHTML(data: {
   .brand {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
   }
 
   .brand-mark {
-    width: 34px;
-    height: 34px;
-    border-radius: 10px;
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
     background: var(--accent);
     display: flex;
     align-items: center;
@@ -302,7 +305,7 @@ function generateReportHTML(data: {
   }
 
   .brand-name {
-    font-size: 15px;
+    font-size: 16px;
     font-weight: 700;
     letter-spacing: -0.01em;
   }
@@ -841,16 +844,16 @@ function generateReportHTML(data: {
     position: absolute;
     left: 18mm;
     right: 18mm;
-    bottom: 10mm;
+    bottom: 9mm;
     color: var(--text-muted);
     font-size: 9px;
-    background: var(--bg);
-    padding: 4px 0;
-    z-index: 10;
+    padding-top: 4mm;
+    border-top: 1px solid rgba(212, 207, 197, 0.65);
+    background: transparent;
   }
 
   .page {
-    padding-bottom: 28mm !important;
+    padding-bottom: 34mm !important;
   }
 
   .screen-toolbar {

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { DM_Sans, JetBrains_Mono, Instrument_Serif } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 
 const body = DM_Sans({
@@ -44,6 +45,7 @@ export default function RootLayout({
         className={`${body.variable} ${mono.variable} ${display.variable} antialiased`}
       >
         {children}
+        <Analytics />
       </body>
     </html>
   );
