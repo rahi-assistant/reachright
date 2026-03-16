@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 
 /* ── Types ─────────────────────────────────────────────────────────────────── */
 
@@ -182,9 +183,7 @@ export default function Home() {
       <nav className="sticky top-0 z-50 backdrop-blur-xl border-b" style={{ background: 'var(--bg)', borderColor: 'var(--border)', backgroundColor: 'rgba(250,248,245,0.85)' }}>
         <div className="max-w-5xl mx-auto px-6 h-14 flex items-center justify-between">
           <a href="/" className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-md flex items-center justify-center" style={{ background: 'var(--accent)' }}>
-              <span className="text-white font-bold text-xs">R</span>
-            </div>
+            <Image src="/logo.svg" alt="ReachRight" width={28} height={28} className="rounded-md" />
             <span className="font-semibold text-[15px] tracking-tight" style={{ color: 'var(--text)' }}>ReachRight</span>
           </a>
           <div className="flex items-center gap-5 text-[13px]">
@@ -364,9 +363,7 @@ export default function Home() {
       <footer className="border-t py-8 px-6" style={{ borderColor: 'var(--border)' }}>
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <div className="w-5 h-5 rounded flex items-center justify-center" style={{ background: 'var(--accent)' }}>
-              <span className="text-white font-bold text-[9px]">R</span>
-            </div>
+            <Image src="/logo.svg" alt="ReachRight" width={20} height={20} className="rounded" />
             <span className="text-sm" style={{ color: 'var(--text-muted)' }}>ReachRight</span>
           </div>
           <p className="text-xs" style={{ color: 'var(--text-muted)' }}>AI-powered growth for local businesses</p>
