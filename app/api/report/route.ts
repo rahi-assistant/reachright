@@ -840,9 +840,16 @@ function generateReportHTML(data: {
     position: absolute;
     left: 18mm;
     right: 18mm;
-    bottom: 14mm;
+    bottom: 10mm;
     color: var(--text-muted);
     font-size: 9px;
+    background: var(--bg);
+    padding: 4px 0;
+    z-index: 10;
+  }
+
+  .page {
+    padding-bottom: 28mm !important;
   }
 
   .screen-toolbar {
