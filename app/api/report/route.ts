@@ -1308,27 +1308,26 @@ function generateReportHTML(data: {
 async function generatePDF(html: string): Promise<Buffer> {
   // Use @sparticuz/chromium on Vercel (serverless), local Chrome otherwise
   let executablePath: string;
+  let chromiumArgs: string[] = ['--no-sandbox', '--disable-setuid-sandbox', '--disable-gpu', '--disable-dev-shm-usage'];
   try {
-    const chromium = await import('@sparticuz/chromium');
-    executablePath = await chromium.default.executablePath();
-    chromium.default.setHeadlessMode = 'shell';
+    const chromium = (await import('@sparticuz/chromium')).default;
+    executablePath = await chromium.executablePath();
+    chromiumArgs = chromium.args;
   } catch {
-    // Local dev fallback — find system Chrome/Chromium
+    // Local dev fallback
+    const fs = await import('fs');
     const paths = [
-      '/usr/bin/google-chrome',
       '/usr/bin/google-chrome-stable',
+      '/usr/bin/google-chrome',
       '/usr/bin/chromium-browser',
       '/usr/bin/chromium',
-      '/snap/bin/chromium',
     ];
-    executablePath = paths.find(p => {
-      try { require('fs').accessSync(p); return true; } catch { return false; }
-    }) || '/usr/bin/google-chrome-stable';
+    executablePath = paths.find(p => { try { fs.accessSync(p); return true; } catch { return false; } }) || '/usr/bin/google-chrome-stable';
   }
 
   const browser = await puppeteer.launch({
     executablePath,
-    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-gpu', '--disable-dev-shm-usage'],
+    args: chromiumArgs,
     headless: true,
   });
 
@@ -1448,7 +1447,7 @@ export async function GET(req: NextRequest) {
 
     if (format === 'pdf') {
       const pdfBuffer = await generatePDF(html);
-      return new NextResponse(pdfBuffer, {
+      return new NextResponse(new Uint8Array(pdfBuffer), {
         headers: {
           'Content-Type': 'application/pdf',
           'Content-Disposition': `inline; filename="${name.replace(/[^a-zA-Z0-9]/g, '-')}-ReachRight-Report.pdf"`,
