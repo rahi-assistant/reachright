@@ -254,7 +254,7 @@ function AuditTool() {
               target="_blank"
               className="flex-1 text-center py-3 rounded-xl font-semibold text-sm border transition-all"
               style={{ borderColor: 'var(--border-strong)', color: 'var(--text)' }}>
-              Download Full Report
+              Open Premium Report
             </a>
             <a
               href={`https://wa.me/917439677931?text=${encodeURIComponent(`Hi, I just checked my business "${selected.name}" on ReachRight. Score: ${selected.score}/100. I'd like help improving my online presence.`)}`}
