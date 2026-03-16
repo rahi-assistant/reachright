@@ -268,7 +268,7 @@ function AuditTool() {
           {/* CTA card */}
           <div className="rounded-2xl p-6 text-center" style={{ background: 'var(--accent)', color: 'white' }}>
             <p className="text-lg font-semibold">Want us to fix this for you?</p>
-            <p className="text-sm mt-1 opacity-80">We build your website, optimize your Google listing, and make AI recommend your business.</p>
+            <p className="text-sm mt-1 opacity-80">We build your website, optimize your Google listing, and improve your chances of being discovered through Google and AI assistants.</p>
           </div>
         </div>
       )}
@@ -344,7 +344,7 @@ export default function Home() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-10 stagger">
             {[
               { num: '01', title: 'AI Audit', body: 'Enter your business name. We check if ChatGPT, Gemini, and Google recommend you — plus your website, reviews, photos, and ratings. Score out of 100.' },
-              { num: '02', title: 'Get Visible', body: 'We build your website, optimize your Google listing, and improve your digital footprint so AI assistants start recommending you to customers.' },
+              { num: '02', title: 'Get Visible', body: 'We build your website, optimize your Google listing, and strengthen the signals that help Google and AI assistants discover your business.' },
               { num: '03', title: 'Stay Ahead', body: 'Monthly AI visibility reports. Track your ranking in AI recommendations. See how you compare to competitors. We keep you visible as AI evolves.' },
             ].map(step => (
               <div key={step.num} className="text-center md:text-left">
@@ -459,7 +459,7 @@ export default function Home() {
       <section className="py-16 px-6" style={{ background: 'var(--bg-alt)' }}>
         <div className="max-w-2xl mx-auto text-center">
           <h2 className="font-display text-3xl sm:text-4xl mb-4" style={{ color: 'var(--text)' }}>
-            AI is recommending<br />your competitors. Not you.
+            Your competitors are showing up<br />in AI search. Are you?
           </h2>
           <p className="text-sm mb-6" style={{ color: 'var(--text-secondary)' }}>
             Check your AI visibility score. 30 seconds. Free.
