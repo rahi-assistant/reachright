@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { GoogleGenAI } from '@google/genai';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -6,7 +7,9 @@ export const dynamic = 'force-dynamic';
 const PLACES_SEARCH_URL = 'https://places.googleapis.com/v1/places:searchText';
 const MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY || '';
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
-const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent';
+const MODEL = 'gemini-3-flash-preview';
+
+const genai = GEMINI_API_KEY ? new GoogleGenAI({ apiKey: GEMINI_API_KEY }) : null;
 
 const FIELD_MASK = [
   'places.id',
@@ -39,36 +42,26 @@ async function checkLLMVisibility(businessName: string, businessType: string, ci
   mentioned: string[];
   tip: string;
 }> {
-  if (!GEMINI_API_KEY) return { found: false, rank: null, mentioned: [], tip: 'AI visibility check unavailable.' };
+  if (!genai) return { found: false, rank: null, mentioned: [], tip: 'AI visibility check unavailable.' };
 
-  // Normalize type for natural query
   const typeLabel = (businessType || '').replace(/_/g, ' ').replace(/([A-Z])/g, ' $1').trim().toLowerCase() || 'business';
-
   const prompt = `List the top 10 best ${typeLabel}s in ${city}, India. Just names, numbered 1-10. No descriptions, no explanations.`;
 
   try {
-    const res = await fetch(`${GEMINI_URL}?key=${GEMINI_API_KEY}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { temperature: 0.2, maxOutputTokens: 300 },
-      }),
+    const response = await genai.models.generateContent({
+      model: MODEL,
+      contents: prompt,
+      config: { temperature: 0.2, maxOutputTokens: 300 },
     });
 
-    if (!res.ok) return { found: false, rank: null, mentioned: [], tip: 'AI check failed.' };
-
-    const data = await res.json();
-    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
-
-    // Parse the numbered list
+    const text = response.text || '';
     const lines = text.split('\n').filter((l: string) => l.trim());
     const mentioned: string[] = [];
     let rank: number | null = null;
     const nameLower = businessName.toLowerCase();
 
     for (let i = 0; i < lines.length; i++) {
-      const line = lines[i].replace(/^\d+[\.\)\-]\s*/, '').trim();
+      const line = lines[i].replace(/^\d+[\.\)\-]\s*/, '').replace(/\*+/g, '').trim();
       if (line) mentioned.push(line);
       if (line.toLowerCase().includes(nameLower) || nameLower.includes(line.toLowerCase())) {
         rank = i + 1;
@@ -80,8 +73,8 @@ async function checkLLMVisibility(businessName: string, businessType: string, ci
       rank,
       mentioned: mentioned.slice(0, 10),
       tip: rank
-        ? `Your business ranks #${rank} in AI recommendations. This means AI assistants will suggest you to potential customers.`
-        : `AI assistants like ChatGPT and Google Gemini don't recommend your business when asked for "best ${typeLabel}s in ${city}." This means you're invisible to a growing number of customers who search using AI.`,
+        ? `Your business ranks #${rank} in AI recommendations. AI assistants will suggest you to potential customers.`
+        : `AI assistants like ChatGPT and Google Gemini don't recommend your business when asked for "best ${typeLabel}s in ${city}." You're invisible to customers who search using AI.`,
     };
   } catch {
     return { found: false, rank: null, mentioned: [], tip: 'AI visibility check timed out.' };
@@ -96,7 +89,7 @@ async function analyzeReviewSentiment(reviews: Array<Record<string, unknown>>, b
   weaknesses: string[];
   tip: string;
 }> {
-  if (!GEMINI_API_KEY || !reviews || reviews.length === 0) {
+  if (!genai || !reviews || reviews.length === 0) {
     return { sentiment: 'none', strengths: [], weaknesses: [], tip: 'No reviews to analyze.' };
   }
 
@@ -125,19 +118,13 @@ ${reviewTexts}
 Return ONLY valid JSON, nothing else.`;
 
   try {
-    const res = await fetch(`${GEMINI_URL}?key=${GEMINI_API_KEY}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { temperature: 0.1, maxOutputTokens: 200 },
-      }),
+    const response = await genai.models.generateContent({
+      model: MODEL,
+      contents: prompt,
+      config: { temperature: 0.1, maxOutputTokens: 200 },
     });
 
-    if (!res.ok) return { sentiment: 'none', strengths: [], weaknesses: [], tip: 'Sentiment analysis failed.' };
-
-    const data = await res.json();
-    const text = (data?.candidates?.[0]?.content?.parts?.[0]?.text || '').trim();
+    const text = (response.text || '').trim();
 
     // Parse JSON from response (handle markdown code blocks)
     const jsonStr = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
