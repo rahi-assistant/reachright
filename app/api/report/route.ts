@@ -189,7 +189,7 @@ function generateReportHTML(data: {
 <div class="page cover">
   <div class="cover-header">
     <div class="logo">
-      <div class="logo-mark">R</div>
+      <div class="logo-mark"><svg width="16" height="16" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="16" cy="15" r="9" stroke="white" stroke-width="2" fill="none" opacity="0.35"/><circle cx="16" cy="15" r="5" stroke="white" stroke-width="2" fill="none" opacity="0.65"/><circle cx="16" cy="15" r="2" fill="white"/><path d="M20 11L25 6" stroke="white" stroke-width="2.2" stroke-linecap="round"/><path d="M25 6L25 10" stroke="white" stroke-width="2" stroke-linecap="round"/><path d="M25 6L21 6" stroke="white" stroke-width="2" stroke-linecap="round"/></svg></div>
       <div class="logo-text">ReachRight</div>
     </div>
     <div class="report-date">${date}</div>
@@ -234,7 +234,7 @@ function generateReportHTML(data: {
 <!-- PAGE 2: DETAILED AUDIT -->
 <div class="page">
   <div class="cover-header">
-    <div class="logo"><div class="logo-mark">R</div><div class="logo-text">ReachRight</div></div>
+    <div class="logo"><div class="logo-mark"><svg width="16" height="16" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="16" cy="15" r="9" stroke="white" stroke-width="2" fill="none" opacity="0.35"/><circle cx="16" cy="15" r="5" stroke="white" stroke-width="2" fill="none" opacity="0.65"/><circle cx="16" cy="15" r="2" fill="white"/><path d="M20 11L25 6" stroke="white" stroke-width="2.2" stroke-linecap="round"/><path d="M25 6L25 10" stroke="white" stroke-width="2" stroke-linecap="round"/><path d="M25 6L21 6" stroke="white" stroke-width="2" stroke-linecap="round"/></svg></div><div class="logo-text">ReachRight</div></div>
     <div class="report-date">Page 2 of 3</div>
   </div>
 
@@ -272,7 +272,7 @@ function generateReportHTML(data: {
 <!-- PAGE 3: RECOMMENDATIONS + CTA -->
 <div class="page">
   <div class="cover-header">
-    <div class="logo"><div class="logo-mark">R</div><div class="logo-text">ReachRight</div></div>
+    <div class="logo"><div class="logo-mark"><svg width="16" height="16" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="16" cy="15" r="9" stroke="white" stroke-width="2" fill="none" opacity="0.35"/><circle cx="16" cy="15" r="5" stroke="white" stroke-width="2" fill="none" opacity="0.65"/><circle cx="16" cy="15" r="2" fill="white"/><path d="M20 11L25 6" stroke="white" stroke-width="2.2" stroke-linecap="round"/><path d="M25 6L25 10" stroke="white" stroke-width="2" stroke-linecap="round"/><path d="M25 6L21 6" stroke="white" stroke-width="2" stroke-linecap="round"/></svg></div><div class="logo-text">ReachRight</div></div>
     <div class="report-date">Page 3 of 3</div>
   </div>
 

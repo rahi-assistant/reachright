@@ -7,6 +7,7 @@ export const dynamic = 'force-dynamic';
 const PLACES_SEARCH_URL = 'https://places.googleapis.com/v1/places:searchText';
 const MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY || '';
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY || '';
 const MODEL = 'gemini-3-flash-preview';
 
 const genai = GEMINI_API_KEY ? new GoogleGenAI({ apiKey: GEMINI_API_KEY }) : null;
@@ -32,6 +33,19 @@ interface AuditItem {
   status: 'good' | 'warn' | 'bad';
   value: string;
   tip: string;
+}
+
+interface AIVisibilityResult {
+  found: boolean;
+  rank: number | null;
+  mentioned: string[];
+  tip: string;
+  geminiRank: number | null;
+  geminiFound: boolean;
+  geminiMentioned: string[];
+  chatgptRank: number | null;
+  chatgptFound: boolean;
+  chatgptMentioned: string[];
 }
 
 /* ── Gemini: LLM Visibility Check ──────────────────────────────────────────── */
@@ -79,6 +93,48 @@ async function checkLLMVisibility(businessName: string, businessType: string, ci
   } catch {
     return { found: false, rank: null, mentioned: [], tip: 'AI visibility check timed out.' };
   }
+}
+
+/* ── ChatGPT: LLM Visibility Check ─────────────────────────────────────────── */
+
+async function checkChatGPTVisibility(businessName: string, businessType: string, city: string): Promise<{
+  found: boolean;
+  rank: number | null;
+  mentioned: string[];
+}> {
+  if (!OPENAI_API_KEY) return { found: false, rank: null, mentioned: [] };
+
+  const typeLabel = (businessType || '').replace(/_/g, ' ').replace(/([A-Z])/g, ' $1').trim().toLowerCase() || 'business';
+  const prompt = `List the top 10 best ${typeLabel}s in ${city}, India. Just names, numbered 1-10. No descriptions, no explanations.`;
+
+  try {
+    const res = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${OPENAI_API_KEY}` },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages: [{ role: 'user', content: prompt }],
+        temperature: 0.2,
+        max_tokens: 300,
+      }),
+    });
+
+    if (!res.ok) return { found: false, rank: null, mentioned: [] };
+
+    const data = await res.json();
+    const text = data?.choices?.[0]?.message?.content || '';
+    const lines = text.split('\n').filter((l: string) => l.trim());
+    const mentioned: string[] = [];
+    let rank: number | null = null;
+    const nameLower = businessName.toLowerCase();
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].replace(/^\d+[\.\)\-]\s*/, '').replace(/\*+/g, '').trim();
+      if (line) mentioned.push(line);
+      if (line.toLowerCase().includes(nameLower) || nameLower.includes(line.toLowerCase())) rank = i + 1;
+    }
+    return { found: rank !== null, rank, mentioned: mentioned.slice(0, 10) };
+  } catch { return { found: false, rank: null, mentioned: [] }; }
 }
 
 /* ── Gemini: Review Sentiment Analysis ─────────────────────────────────────── */
@@ -272,32 +328,63 @@ export async function GET(req: NextRequest) {
       let finalScore = baseScore;
 
       if (index === 0) {
-        // Run AI checks in parallel
-        const [visibility, sentiment] = await Promise.all([
+        // Run ALL AI checks in parallel (Gemini + ChatGPT + Sentiment)
+        const [geminiVisibility, chatgptVisibility, sentiment] = await Promise.all([
           checkLLMVisibility(name, type, city),
+          checkChatGPTVisibility(name, type, city),
           analyzeReviewSentiment((place.reviews as Array<Record<string, unknown>>) || [], name),
         ]);
 
-        aiVisibility = visibility;
+        // Merge AI visibility from both models
+        const bestRank = geminiVisibility.found && chatgptVisibility.found
+          ? Math.min(geminiVisibility.rank!, chatgptVisibility.rank!)
+          : geminiVisibility.rank || chatgptVisibility.rank;
+        const foundInAny = geminiVisibility.found || chatgptVisibility.found;
+        const foundCount = (geminiVisibility.found ? 1 : 0) + (chatgptVisibility.found ? 1 : 0);
+
+        aiVisibility = {
+          found: foundInAny,
+          rank: bestRank,
+          mentioned: geminiVisibility.mentioned,
+          tip: foundInAny
+            ? `Found in ${foundCount}/2 AI models. ${geminiVisibility.found ? `Gemini: #${geminiVisibility.rank}` : 'Gemini: not found'}. ${chatgptVisibility.found ? `ChatGPT: #${chatgptVisibility.rank}` : 'ChatGPT: not found'}.`
+            : `Neither ChatGPT nor Google Gemini recommend your business. You're invisible to customers who search using AI.`,
+          // Extra fields for the UI
+          geminiRank: geminiVisibility.found ? geminiVisibility.rank : null,
+          geminiFound: geminiVisibility.found,
+          geminiMentioned: geminiVisibility.mentioned,
+          chatgptRank: chatgptVisibility.found ? chatgptVisibility.rank : null,
+          chatgptFound: chatgptVisibility.found,
+          chatgptMentioned: chatgptVisibility.mentioned,
+        } as AIVisibilityResult;
+
         reviewSentiment = sentiment;
 
-        // AI Visibility scoring (worth 20 points of the total)
-        if (!visibility.found) {
+        // AI Visibility scoring (worth 20 points)
+        if (!foundInAny) {
           finalScore -= 20;
           items.unshift({
             label: 'AI Visibility',
             status: 'bad',
             value: 'Not found in AI',
-            tip: visibility.tip,
+            tip: aiVisibility.tip,
+          });
+        } else if (foundCount === 1) {
+          finalScore -= 8;
+          items.unshift({
+            label: 'AI Visibility',
+            status: 'warn',
+            value: `Found in ${foundCount}/2 AIs`,
+            tip: aiVisibility.tip,
           });
         } else {
           items.unshift({
             label: 'AI Visibility',
-            status: visibility.rank! <= 3 ? 'good' : 'warn',
-            value: `#${visibility.rank} in AI results`,
-            tip: visibility.tip,
+            status: bestRank! <= 3 ? 'good' : 'warn',
+            value: `#${bestRank} (both AIs)`,
+            tip: aiVisibility.tip,
           });
-          if (visibility.rank! > 5) finalScore -= 8;
+          if (bestRank! > 5) finalScore -= 5;
         }
 
         // Sentiment scoring (worth 7 points)
