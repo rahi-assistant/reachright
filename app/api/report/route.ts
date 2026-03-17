@@ -1255,16 +1255,18 @@ function generateReportHTML(data: {
     .summary-card,
     .hero,
     .score-card,
-    .panel,
     .check-item,
     .rec-card,
     .timeline-card,
     .cta-card,
     .priority-item,
-    .stats-grid,
-    .risk-grid {
+    .stat-card {
       break-inside: avoid;
       page-break-inside: avoid;
+    }
+    .section-header {
+      break-after: avoid;
+      page-break-after: avoid;
     }
     .footer {
       break-inside: avoid;
