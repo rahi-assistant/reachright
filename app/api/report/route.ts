@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenAI } from '@google/genai';
 import { rateLimit } from '@/app/lib/rate-limit';
-import puppeteer from 'puppeteer-core';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -1248,8 +1247,32 @@ function generateReportHTML(data: {
 </head>
 <body>
   <div class="screen-toolbar">
-    <button class="screen-button" onclick="(function(){var u=new URL(window.location.href);u.searchParams.set('format','pdf');window.location.href=u.toString()})()">Download PDF</button>
+    <button class="screen-button" id="pdf-btn" onclick="downloadPDF()">Download PDF</button>
   </div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.2/html2pdf.bundle.min.js"></script>
+  <script>
+    function downloadPDF() {
+      var btn = document.getElementById('pdf-btn');
+      btn.textContent = 'Generating...';
+      btn.disabled = true;
+      var toolbar = document.querySelector('.screen-toolbar');
+      toolbar.style.display = 'none';
+      var pages = document.querySelectorAll('.page');
+      var opt = {
+        margin: 0,
+        filename: document.title.replace(/[^a-zA-Z0-9 ]/g, '') + '.pdf',
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, logging: false },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        pagebreak: { mode: ['css', 'legacy'], before: '.page' }
+      };
+      html2pdf().set(opt).from(document.body).save().then(function() {
+        toolbar.style.display = '';
+        btn.textContent = 'Download PDF';
+        btn.disabled = false;
+      });
+    }
+  </script>
   <section class="page">
     <div class="page-inner">
       <div class="topbar">
@@ -1534,48 +1557,6 @@ function generateReportHTML(data: {
 </html>`;
 }
 
-/* ── Server-side PDF generation ────────────────────────────────────────────── */
-
-async function generatePDF(html: string): Promise<Buffer> {
-  // Use @sparticuz/chromium on Vercel (serverless), local Chrome otherwise
-  let executablePath: string;
-  let chromiumArgs: string[] = ['--no-sandbox', '--disable-setuid-sandbox', '--disable-gpu', '--disable-dev-shm-usage'];
-  try {
-    const chromium = (await import('@sparticuz/chromium')).default;
-    executablePath = await chromium.executablePath();
-    chromiumArgs = chromium.args;
-  } catch {
-    // Local dev fallback
-    const fs = await import('fs');
-    const paths = [
-      '/usr/bin/google-chrome-stable',
-      '/usr/bin/google-chrome',
-      '/usr/bin/chromium-browser',
-      '/usr/bin/chromium',
-    ];
-    executablePath = paths.find(p => { try { fs.accessSync(p); return true; } catch { return false; } }) || '/usr/bin/google-chrome-stable';
-  }
-
-  const browser = await puppeteer.launch({
-    executablePath,
-    args: chromiumArgs,
-    headless: true,
-  });
-
-  try {
-    const page = await browser.newPage();
-    await page.setContent(html, { waitUntil: 'networkidle0', timeout: 15000 });
-    const pdf = await page.pdf({
-      format: 'A4',
-      printBackground: true,
-      margin: { top: '0', right: '0', bottom: '0', left: '0' },
-    });
-    return Buffer.from(pdf);
-  } finally {
-    await browser.close();
-  }
-}
-
 /* ── API Route ─────────────────────────────────────────────────────────────── */
 
 async function checkChatGPTVisibility(name: string, type: string, city: string) {
@@ -1675,16 +1656,6 @@ export async function GET(req: NextRequest) {
 
     // 3. Generate HTML report
     const html = generateReportHTML({ name, address, type, score: finalScore, items, ai, recommendations, date });
-
-    if (format === 'pdf') {
-      const pdfBuffer = await generatePDF(html);
-      return new NextResponse(new Uint8Array(pdfBuffer), {
-        headers: {
-          'Content-Type': 'application/pdf',
-          'Content-Disposition': `inline; filename="${name.replace(/[^a-zA-Z0-9]/g, '-')}-ReachRight-Report.pdf"`,
-        },
-      });
-    }
 
     return new NextResponse(html, {
       headers: {
