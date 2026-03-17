@@ -1,16 +1,17 @@
 import React from 'react';
 import { Document, Page, Text, View, StyleSheet, Font, Svg, Circle, Path, Defs, LinearGradient, Stop } from '@react-pdf/renderer';
 
-// Register standard fonts mimicking Instrument Serif and JetBrains Mono where possible
-Font.register({
-  family: 'Serif',
-  src: 'https://fonts.gstatic.com/s/tirodevanagarisan/v4/w82Kx2czr9eYwV1B-G6E3yRzU6wF7pEWeXw-QzU.ttf'
-});
-
+// Use built-in Helvetica for body, register only JetBrains Mono for data
 Font.register({
   family: 'Mono',
-  src: 'https://fonts.gstatic.com/s/jetbrainsmono/v18/tDbY2o-flEEny0FZhsfKu5WU4xT2B_x3rA.ttf'
+  fonts: [
+    { src: 'https://cdn.jsdelivr.net/fontsource/fonts/jetbrains-mono@latest/latin-400-normal.ttf', fontWeight: 400 },
+    { src: 'https://cdn.jsdelivr.net/fontsource/fonts/jetbrains-mono@latest/latin-700-normal.ttf', fontWeight: 700 },
+  ],
 });
+
+// Use Helvetica-Bold as Serif substitute (built-in, no download needed)
+const SerifFamily = 'Helvetica-Bold';
 
 // Primary Theme: Dark sophisticated + Warm accents
 const theme = {
@@ -45,7 +46,7 @@ const styles = StyleSheet.create({
   hero: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 40 },
   heroCopy: { width: '55%' },
   eyebrow: { fontSize: 9, color: theme.textSecondary, textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 8, fontFamily: 'Mono' },
-  reportTitle: { fontSize: 36, fontWeight: 'bold', marginBottom: 16, color: theme.textMain, lineHeight: 1.1, fontFamily: 'Serif' },
+  reportTitle: { fontSize: 36, fontWeight: 'bold', marginBottom: 16, color: theme.textMain, lineHeight: 1.1, fontFamily: 'Helvetica-Bold' },
   heroBody: { fontSize: 12, color: theme.textSecondary, lineHeight: 1.6, marginBottom: 24 },
   
   subjectCard: { borderTop: `1px solid ${theme.border}`, paddingTop: 16 },
@@ -57,12 +58,12 @@ const styles = StyleSheet.create({
   scoreRing: { width: 120, height: 120, borderRadius: 60, border: `2px dashed ${theme.accent}`, justifyContent: 'center', alignItems: 'center', marginBottom: 20 },
   scoreNumber: { fontSize: 48, fontWeight: 'bold', color: theme.textLight },
   scoreMax: { fontSize: 12, color: theme.textSecondary, fontFamily: 'Mono' },
-  scoreLabel: { fontSize: 16, fontWeight: 'bold', color: theme.textLight, marginBottom: 8, fontFamily: 'Serif' },
+  scoreLabel: { fontSize: 16, fontWeight: 'bold', color: theme.textLight, marginBottom: 8, fontFamily: 'Helvetica-Bold' },
   scoreBody: { fontSize: 10, color: '#A09D98', textAlign: 'center', lineHeight: 1.5 },
 
   // Section Headers
   sectionHeader: { marginBottom: 20, borderBottom: `1px solid ${theme.border}`, paddingBottom: 12 },
-  sectionTitle: { fontSize: 24, fontWeight: 'bold', color: theme.textMain, fontFamily: 'Serif' },
+  sectionTitle: { fontSize: 24, fontWeight: 'bold', color: theme.textMain, fontFamily: 'Helvetica-Bold' },
   sectionCopy: { fontSize: 11, color: theme.textSecondary, marginTop: 4 },
 
   // Audit Grid
@@ -76,7 +77,7 @@ const styles = StyleSheet.create({
 
   // AI Details (Dark Theme)
   aiContainer: { backgroundColor: theme.darkBg, padding: 24, borderRadius: 12, marginBottom: 24 },
-  aiTitle: { fontSize: 24, color: '#F6D38F', marginBottom: 12, fontFamily: 'Serif' },
+  aiTitle: { fontSize: 24, color: '#F6D38F', marginBottom: 12, fontFamily: 'Helvetica-Bold' },
   aiText: { fontSize: 12, color: theme.textLight, opacity: 0.8, marginBottom: 24, lineHeight: 1.6 },
   
   modelGrid: { flexDirection: 'row', justifyContent: 'space-between' },
@@ -100,7 +101,7 @@ const styles = StyleSheet.create({
   // Summary / CTA Card
   ctaCard: { marginTop: 30, padding: 24, backgroundColor: theme.accentSoft, borderRadius: 12, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   ctaCopy: { width: '60%' },
-  ctaTitle: { fontSize: 20, fontWeight: 'bold', color: theme.textMain, marginBottom: 8, fontFamily: 'Serif' },
+  ctaTitle: { fontSize: 20, fontWeight: 'bold', color: theme.textMain, marginBottom: 8, fontFamily: 'Helvetica-Bold' },
   ctaText: { fontSize: 11, color: theme.textSecondary, lineHeight: 1.5 },
   contactStack: { width: '35%' },
   contactItem: { backgroundColor: theme.cardBg, padding: 12, borderRadius: 6, marginBottom: 8 },
@@ -135,7 +136,7 @@ export const ReportPDF = ({ data }: { data: any }) => {
         <View style={styles.topbar}>
           <View style={styles.brandGroup}>
             <View style={styles.brandLogo}>
-              <Text style={{ color: '#FFF', fontSize: 14, fontWeight: 'bold', fontFamily: 'Serif' }}>R</Text>
+              <Text style={{ color: '#FFF', fontSize: 14, fontWeight: 'bold', fontFamily: 'Helvetica-Bold' }}>R</Text>
             </View>
             <View>
               <Text style={styles.brandName}>ReachRight</Text>
@@ -202,7 +203,7 @@ export const ReportPDF = ({ data }: { data: any }) => {
         <View style={styles.topbar}>
           <View style={styles.brandGroup}>
             <View style={styles.brandLogo}>
-              <Text style={{ color: '#FFF', fontSize: 14, fontWeight: 'bold', fontFamily: 'Serif' }}>R</Text>
+              <Text style={{ color: '#FFF', fontSize: 14, fontWeight: 'bold', fontFamily: 'Helvetica-Bold' }}>R</Text>
             </View>
             <View>
               <Text style={styles.brandName}>ReachRight</Text>
