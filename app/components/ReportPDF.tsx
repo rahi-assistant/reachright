@@ -35,7 +35,7 @@ const s = StyleSheet.create({
   // Topbar
   topbar: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', borderBottom: `1px solid ${theme.border}`, paddingBottom: 12, marginBottom: 30 },
   brandRow: { flexDirection: 'row', alignItems: 'center' },
-  brandLogo: { width: 28, height: 28, backgroundColor: theme.accent, borderRadius: 6, marginRight: 10, justifyContent: 'center', alignItems: 'center' },
+  brandLogo: { width: 28, height: 28, backgroundColor: '#c2410c', borderRadius: 6, marginRight: 10, justifyContent: 'center', alignItems: 'center' },
   brandName: { fontSize: 16, fontWeight: 'bold', color: theme.textMain },
   brandSub: { fontSize: 8, color: theme.textSecondary, textTransform: 'uppercase', letterSpacing: 1.2, marginTop: 1, fontFamily: 'Mono' },
   pageNum: { fontSize: 9, color: theme.textSecondary, fontFamily: 'Mono' },
@@ -121,12 +121,23 @@ const s = StyleSheet.create({
 const getStatusColor = (status: string) => status === 'good' ? theme.success : status === 'warn' ? theme.warning : theme.danger;
 const getStatusLabel = (status: string) => status === 'good' ? 'Healthy' : status === 'warn' ? 'Watch' : 'Critical';
 
-const Topbar = ({ sub, pageNum, name: _name }: { sub: string; pageNum: string; name?: string }) => (
+const Logo = () => (
+  <View style={s.brandLogo}>
+    <Svg width={18} height={18} viewBox="0 0 32 32">
+      <Circle cx={16} cy={15} r={9} stroke="white" strokeWidth={2} fill="none" opacity={0.35} />
+      <Circle cx={16} cy={15} r={5} stroke="white" strokeWidth={2} fill="none" opacity={0.65} />
+      <Circle cx={16} cy={15} r={2} fill="white" />
+      <Path d="M20 11L25 6" stroke="white" strokeWidth={2.2} strokeLinecap="round" />
+      <Path d="M25 6L25 10" stroke="white" strokeWidth={2} strokeLinecap="round" />
+      <Path d="M25 6L21 6" stroke="white" strokeWidth={2} strokeLinecap="round" />
+    </Svg>
+  </View>
+);
+
+const Topbar = ({ sub, pageNum }: { sub: string; pageNum: string }) => (
   <View style={s.topbar}>
     <View style={s.brandRow}>
-      <View style={s.brandLogo}>
-        <Text style={{ color: '#FFF', fontSize: 14, fontWeight: 'bold', fontFamily: 'Helvetica-Bold' }}>R</Text>
-      </View>
+      <Logo />
       <View>
         <Text style={s.brandName}>ReachRight</Text>
         <Text style={s.brandSub}>{sub}</Text>
@@ -211,9 +222,9 @@ export const ReportPDF = ({ data }: { data: any }) => {
         <Footer name={name} />
       </Page>
 
-      {/* PAGE 2: AI Scan + Signal Checklist */}
+      {/* PAGE 2: AI Scan */}
       <Page size="A4" style={s.page}>
-        <Topbar sub="Detailed Diagnosis" pageNum="Page 2 of 3" />
+        <Topbar sub="Detailed Diagnosis" pageNum="Page 2 of 4" />
 
         <View style={s.sectionHeader}>
           <Text style={s.sectionTitle}>AI Recommendation Scan</Text>
@@ -267,6 +278,13 @@ export const ReportPDF = ({ data }: { data: any }) => {
           </View>
         </View>
 
+        <Footer name={name} />
+      </Page>
+
+      {/* PAGE 3: Signal Checklist */}
+      <Page size="A4" style={s.page}>
+        <Topbar sub="Detailed Checklist" pageNum="Page 3 of 4" />
+
         <View style={s.sectionHeader}>
           <Text style={s.sectionTitle}>Signal-by-Signal Checklist</Text>
           <Text style={s.sectionCopy}>Every row is a trust or discovery signal customers check before they decide.</Text>
@@ -291,9 +309,9 @@ export const ReportPDF = ({ data }: { data: any }) => {
         <Footer name={name} />
       </Page>
 
-      {/* PAGE 3: Roadmap + CTA */}
+      {/* PAGE 4: Roadmap + CTA */}
       <Page size="A4" style={s.page}>
-        <Topbar sub="Action Roadmap" pageNum="Page 3 of 3" />
+        <Topbar sub="Action Roadmap" pageNum="Page 4 of 4" />
 
         <View style={s.sectionHeader}>
           <Text style={s.sectionTitle}>Recommended Next Moves</Text>

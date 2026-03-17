@@ -121,12 +121,15 @@ function parseRankedMentions(text: string): string[] {
     .replace(/\*\*/g, '')
     .replace(/\*/g, '');
 
+  const junk = /^(true|false|yes|no|none|null|undefined|n\/a|na|the|and|or|in|of|a|an)$/i;
+
   return normalized
     .split('\n')
     .map(line => line.replace(/^\s*\d{1,2}[\.\)\-:]\s*/, '').trim())
-    .filter(line => line.length > 1)
+    .filter(line => line.length > 2)
     .filter(line => !/^\d+$/.test(line))
     .filter(line => /[A-Za-z]/.test(line))
+    .filter(line => !junk.test(line))
     .slice(0, 10);
 }
 
@@ -246,7 +249,7 @@ export async function GET(req: NextRequest) {
     return new NextResponse(readableStream, {
       headers: {
         'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="${name.replace(/[^a-zA-Z0-9]/g, '-')}-ReachRight-Report.pdf"`,
+        'Content-Disposition': `inline; filename="${name.replace(/[^a-zA-Z0-9]/g, '-')}-ReachRight-Report.pdf"`,
       },
     });
   } catch (err) {
