@@ -377,10 +377,13 @@ function generateReportHTML(data: {
         <div class="brand-group">
           
           <div class="brand-logo">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2"/>
-              <circle cx="12" cy="12" r="4" stroke="white" stroke-width="2"/>
-              <circle cx="12" cy="12" r="1.5" fill="white"/>
+            <svg width="20" height="20" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="16" cy="15" r="9" stroke="white" stroke-width="2" fill="none" opacity="0.35"/>
+              <circle cx="16" cy="15" r="5" stroke="white" stroke-width="2" fill="none" opacity="0.65"/>
+              <circle cx="16" cy="15" r="2" fill="white"/>
+              <path d="M20 11L25 6" stroke="white" stroke-width="2.2" stroke-linecap="round"/>
+              <path d="M25 6L25 10" stroke="white" stroke-width="2" stroke-linecap="round"/>
+              <path d="M25 6L21 6" stroke="white" stroke-width="2" stroke-linecap="round"/>
             </svg>
           </div>
           <div>
