@@ -14,6 +14,7 @@ Font.register({
 Font.registerHyphenationCallback(word => [word]);
 
 const theme = {
+  primary: '#DC582A',
   bg: '#F8F6F2',
   cardBg: '#FFFFFF',
   darkBg: '#1A1816',

@@ -180,6 +180,7 @@ function generateReportHTML(data: {
     --dark-bg: #1A1816;
     --dark-card: #24211D;
     --text-main: #1A1A1A;
+    --primary: #DC582A;
     --text-sec: #666666;
     --text-light: #F2EFE9;
     --accent: #C4623C;
@@ -253,11 +254,10 @@ function generateReportHTML(data: {
   .brand-group { display: flex; align-items: center; gap: 12px; }
   .brand-logo {
     width: 32px; height: 32px;
-    background: var(--text-main);
+    background: var(--primary);
     color: white;
     display: flex; justify-content: center; align-items: center;
-    font-family: 'Instrument Serif', serif;
-    font-size: 20px;
+    
     border-radius: 6px;
   }
   .brand-name { font-size: 18px; font-weight: bold; letter-spacing: 0.5px; }
@@ -375,7 +375,14 @@ function generateReportHTML(data: {
     <div class="page-inner">
       <div class="topbar">
         <div class="brand-group">
-          <div class="brand-logo">R</div>
+          
+          <div class="brand-logo">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2"/>
+              <circle cx="12" cy="12" r="4" stroke="white" stroke-width="2"/>
+              <circle cx="12" cy="12" r="1.5" fill="white"/>
+            </svg>
+          </div>
           <div>
             <div class="brand-name">ReachRight</div>
             <div class="brand-sub">Premium visibility report</div>
@@ -452,8 +459,29 @@ function generateReportHTML(data: {
         </div>
       </div>
 
+      
       <div class="section-header">
-        <h2 class="section-title">Strategic Roadmap</h2>
+        <h2 class="section-title">Signal-by-Signal Checklist</h2>
+        <p class="section-copy">Every row is a trust or discovery signal customers check before they decide.</p>
+      </div>
+
+      <div class="checklist-stack" style="display: flex; flex-direction: column; gap: 16px; margin-bottom: 50px;">
+        ${items.map(item => `
+          <div style="display: flex; align-items: center; background: var(--card-bg); padding: 24px; border-radius: 8px; border: 1px solid var(--border); gap: 20px;">
+            <div style="width: 32px; height: 32px; border-radius: 16px; background: var(--${item.status === 'bad' ? 'danger' : item.status === 'warn' ? 'warning' : 'success'}); flex-shrink: 0;"></div>
+            <div style="flex: 1;">
+              <div style="font-size: 18px; font-weight: bold; margin-bottom: 6px;">${escapeHtml(item.label)}</div>
+              <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text-sec); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 6px;">
+                ${item.status === 'bad' ? 'CRITICAL' : item.status === 'warn' ? 'NEEDS WORK' : 'HEALTHY'}
+              </div>
+              <div style="font-size: 13px; color: var(--text-sec);">${escapeHtml(item.tip)}</div>
+            </div>
+            <div style="font-family: 'JetBrains Mono', monospace; font-size: 14px; color: var(--text-sec);">${escapeHtml(item.value)}</div>
+          </div>
+        `).join('')}
+      </div>
+<div class="section-header">
+        <h2 class="section-title">Recommended Next Moves</h2>
         <p class="section-copy">Ordered to improve trust first, local discovery second, and durable ranking strength third.</p>
       </div>
 
