@@ -80,16 +80,29 @@ async function getAIVisibility(name: string, type: string, city: string) {
 }
 
 async function getRecommendations(name: string, type: string, items: AuditItem[], score: number) {
-  if (!genai) return ['Build a professional website', 'Optimize your Google Business listing', 'Ask customers for Google reviews'];
+  const fallback = [
+    'Build a professional, mobile-responsive website with online booking and service menu to capture customers searching online.',
+    'Optimize your Google Business listing with high-quality photos, complete hours, and respond to reviews to boost local ranking.',
+    'Encourage satisfied customers to leave Google reviews and maintain a consistent posting schedule to strengthen AI visibility.',
+  ];
+  if (!genai) return fallback;
   const issues = items.filter(i => i.status === 'bad' || i.status === 'warn').map(i => `${i.label}: ${i.value}`).join(', ');
   try {
     const res = await genai.models.generateContent({
       model: MODEL,
-      contents: `You are a digital marketing consultant. A ${type || 'business'} called "${name}" scored ${score}/100 on our audit. Issues: ${issues}. Write exactly 3 specific, actionable recommendations. Each should be 1-2 sentences. No numbering, no bullet points, just the 3 recommendations separated by newlines. Be specific to this business type.`,
-      config: { temperature: 0.3, maxOutputTokens: 300 },
+      contents: `You are a digital marketing consultant. A ${type || 'business'} called "${name}" scored ${score}/100 on our audit. Issues: ${issues}. Write exactly 3 specific, actionable recommendations as 3 separate paragraphs. Each paragraph should be 1-2 sentences max. Separate each recommendation with a blank line. No numbering, no bullet points. Be specific to this business type.`,
+      config: { temperature: 0.3, maxOutputTokens: 400 },
     });
-    return (res.text || '').split('\n').filter((l: string) => l.trim().length > 10).slice(0, 3);
-  } catch { return ['Build a professional website to capture online customers', 'Optimize your Google Business listing with photos and hours', 'Encourage satisfied customers to leave Google reviews']; }
+    const text = (res.text || '').replace(/^\d+[\.\)]\s*/gm, '').replace(/^[-*]\s*/gm, '');
+    let recs = text.split(/\n\s*\n/).map((l: string) => l.trim()).filter((l: string) => l.length > 15);
+    if (recs.length < 3) {
+      recs = text.split('\n').map((l: string) => l.trim()).filter((l: string) => l.length > 15);
+    }
+    if (recs.length < 3) {
+      while (recs.length < 3) recs.push(fallback[recs.length]);
+    }
+    return recs.slice(0, 3);
+  } catch { return fallback; }
 }
 
 function escapeHtml(value: unknown): string {
