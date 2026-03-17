@@ -134,6 +134,1471 @@ function parseRankedMentions(text: string): string[] {
 }
 
 /* ── HTML Report Generator ─────────────────────────────────────────────────── */
+function generateReportHTML(data: {
+  name: string; address: string; type: string; score: number;
+  items: AuditItem[]; ai: { found: boolean; rank: number | null; mentioned: string[]; geminiRank: number | null; geminiFound: boolean; chatgptRank: number | null; chatgptFound: boolean; chatgptMentioned: string[] };
+  recommendations: string[]; date: string;
+}): string {
+  const { name, address, type, score, items, ai, recommendations, date } = data;
+  const scoreColor = score >= 80 ? '#15803d' : score >= 50 ? '#ca8a04' : '#dc2626';
+  const scoreLabel = score >= 80 ? 'Strong Presence' : score >= 50 ? 'Needs Work' : 'Critical Gaps';
+  const scoreSummary = score >= 80
+    ? 'Your presence is already credible. The next move is holding rank and compounding discovery.'
+    : score >= 50
+    ? 'Your business is visible, but trust and discovery signals are still inconsistent.'
+    : 'Your business is losing visibility across both Google and AI-assisted discovery.';
+  const typeLabel = (type || 'business').replace(/_/g, ' ');
+  const badCount = items.filter(i => i.status === 'bad').length;
+  const warnCount = items.filter(i => i.status === 'warn').length;
+  const goodCount = items.filter(i => i.status === 'good').length;
+  const websiteItem = items.find(i => i.label === 'Website');
+  const ratingItem = items.find(i => i.label === 'Google Rating');
+  const reviewsItem = items.find(i => i.label === 'Reviews');
+  const priorityItems = items.filter(i => i.status !== 'good').slice(0, 3);
+
+  const statusLabel = (status: AuditItem['status']) => status === 'good' ? 'Healthy' : status === 'warn' ? 'Improve' : 'Critical';
+  const statusIcon = (status: AuditItem['status']) => status === 'good' ? '&#10003;' : status === 'warn' ? '&#9888;' : '&#10007;';
+  const statusColor = (status: AuditItem['status']) => status === 'good' ? '#15803d' : status === 'warn' ? '#ca8a04' : '#dc2626';
+  const statusBg = (status: AuditItem['status']) => status === 'good' ? '#eef8f0' : status === 'warn' ? '#fff7e7' : '#fdf0ec';
+
+  const safeName = escapeHtml(name);
+  const safeAddress = escapeHtml(address);
+  const safeType = escapeHtml(typeLabel);
+  const safeDate = escapeHtml(date);
+  const safeScoreLabel = escapeHtml(scoreLabel);
+  const safeScoreSummary = escapeHtml(scoreSummary);
+
+  const statCards = [
+    { label: 'AI Visibility', value: ai.found ? `Rank #${ai.rank ?? '—'}` : 'Not found', tone: ai.found ? 'good' : 'bad' },
+    { label: 'Google Rating', value: ratingItem?.value || '—', tone: ratingItem?.status || 'warn' },
+    { label: 'Review Volume', value: reviewsItem?.value || '—', tone: reviewsItem?.status || 'warn' },
+    { label: 'Website', value: websiteItem?.status === 'good' ? 'Live' : websiteItem?.value || 'Missing', tone: websiteItem?.status || 'bad' },
+  ].map(card => `
+    <div class="stat-card">
+      <div class="stat-label">${escapeHtml(card.label)}</div>
+      <div class="stat-value" style="color:${statusColor(card.tone as AuditItem['status'])}">${escapeHtml(card.value)}</div>
+    </div>
+  `).join('');
+
+  const priorityMarkup = (priorityItems.length ? priorityItems : items.slice(0, 3)).map((item, index) => `
+    <div class="priority-item">
+      <div class="priority-index">${String(index + 1).padStart(2, '0')}</div>
+      <div>
+        <div class="priority-title">${escapeHtml(item.label)}</div>
+        <div class="priority-body">${escapeHtml(item.tip)}</div>
+      </div>
+    </div>
+  `).join('');
+
+  const checklistMarkup = items.map(item => `
+    <div class="check-item" style="background:${statusBg(item.status)}; border-color:${statusColor(item.status)}22">
+      <div class="check-top">
+        <div class="check-badge" style="background:${statusColor(item.status)}">${statusIcon(item.status)}</div>
+        <div class="check-main">
+          <div class="check-row">
+            <span class="check-title">${escapeHtml(item.label)}</span>
+            <span class="check-value" style="color:${statusColor(item.status)}">${escapeHtml(item.value)}</span>
+          </div>
+          <div class="check-meta">${statusLabel(item.status)}</div>
+          <div class="check-tip">${escapeHtml(item.tip)}</div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+
+  const geminiMarkup = ai.mentioned.slice(0, 5).map((entry, index) => {
+    const isMatch = entry.toLowerCase().includes(name.toLowerCase()) || name.toLowerCase().includes(entry.toLowerCase());
+    return `
+      <div class="ai-row ${isMatch ? 'match' : ''}">
+        <span class="ai-rank">${index + 1}</span>
+        <span class="ai-name">${escapeHtml(entry)}</span>
+        ${isMatch ? '<span class="ai-tag">You</span>' : ''}
+      </div>
+    `;
+  }).join('');
+
+  const chatgptMarkup = (ai.chatgptMentioned || []).slice(0, 5).map((entry, index) => {
+    const isMatch = entry.toLowerCase().includes(name.toLowerCase()) || name.toLowerCase().includes(entry.toLowerCase());
+    return `
+      <div class="ai-row ${isMatch ? 'match' : ''}">
+        <span class="ai-rank">${index + 1}</span>
+        <span class="ai-name">${escapeHtml(entry)}</span>
+        ${isMatch ? '<span class="ai-tag">You</span>' : ''}
+      </div>
+    `;
+  }).join('');
+
+  const recommendationsMarkup = recommendations.slice(0, 3).map((entry, index) => `
+    <div class="rec-card">
+      <div class="rec-kicker">Priority ${index + 1}</div>
+      <div class="rec-title">${index === 0 ? 'Fix trust blockers' : index === 1 ? 'Increase local discovery' : 'Build durable visibility'}</div>
+      <div class="rec-body">${escapeHtml(entry)}</div>
+    </div>
+  `).join('');
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>${safeName} - ReachRight Report</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+  :root {
+    --bg: #faf8f5;
+    --bg-alt: #f2efe9;
+    --surface: #ffffff;
+    --border: #e8e4dd;
+    --border-strong: #d4cfc5;
+    --text: #1a1814;
+    --text-secondary: #6b6560;
+    --text-muted: #9c9590;
+    --accent: #c2410c;
+    --accent-soft: #fff2ec;
+    --success: #15803d;
+    --warning: #ca8a04;
+    --danger: #dc2626;
+    --data-bg: #1a1814;
+    --data-surface: #252220;
+    --data-border: #3a3632;
+    --data-text: #f2efe9;
+    --data-muted: #b7aea7;
+  }
+
+  @page {
+    size: A4;
+    margin: 0;
+  }
+
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: #efe8de;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 0 auto;
+    padding: 18mm;
+    position: relative;
+    page-break-after: always;
+    background:
+      radial-gradient(circle at top right, rgba(194,65,12,0.08), transparent 30%),
+      linear-gradient(180deg, #fbfaf7 0%, var(--bg) 100%);
+  }
+
+  .page:last-child { page-break-after: auto; }
+
+  .page::before {
+    content: '';
+    position: absolute;
+    top: 12mm;
+    left: 12mm;
+    right: 12mm;
+    bottom: 18mm;
+    border: 1px solid rgba(212, 207, 197, 0.65);
+    pointer-events: none;
+  }
+
+  .page-inner {
+    position: relative;
+    z-index: 1;
+    padding-bottom: 24mm;
+  }
+
+  .topbar, .footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .brand-mark {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.22);
+  }
+
+  .brand-name {
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  .brand-sub,
+  .eyebrow,
+  .mono {
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .brand-sub, .eyebrow {
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .hero {
+    display: grid;
+    grid-template-columns: 1.25fr 0.95fr;
+    gap: 14px;
+    margin-top: 12px;
+  }
+
+  .hero-copy,
+  .score-card,
+  .summary-card,
+  .stat-card,
+  .panel,
+  .check-item,
+  .rec-card,
+  .timeline-card,
+  .cta-card {
+    border-radius: 20px;
+  }
+
+  .hero-copy {
+    background: rgba(255,255,255,0.82);
+    border: 1px solid var(--border);
+    padding: 20px;
+  }
+
+  .report-title,
+  .section-title,
+  .subject-name,
+  .score-label,
+  .cta-title {
+    font-family: 'Instrument Serif', serif;
+    letter-spacing: -0.02em;
+  }
+
+  .report-title {
+    font-size: 46px;
+    line-height: 0.96;
+    margin: 8px 0 10px;
+  }
+
+  .hero-body {
+    max-width: 90%;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--text-secondary);
+  }
+
+  .subject-card {
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+  }
+
+  .subject-name {
+    font-size: 26px;
+    line-height: 1.05;
+    margin-bottom: 4px;
+  }
+
+  .subject-meta {
+    font-size: 13px;
+    line-height: 1.7;
+    color: var(--text-secondary);
+  }
+
+  .score-card {
+    background: linear-gradient(180deg, var(--data-bg) 0%, #231f1b 100%);
+    color: var(--data-text);
+    padding: 22px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  .score-ring {
+    width: 132px;
+    height: 132px;
+    border-radius: 50%;
+    background:
+      radial-gradient(circle at center, #1f1b18 58%, transparent 59%),
+      conic-gradient(${scoreColor} ${score}%, rgba(255,255,255,0.12) 0);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 18px;
+  }
+
+  .score-core {
+    width: 94px;
+    height: 94px;
+    border-radius: 50%;
+    background: #1f1b18;
+    border: 1px solid rgba(255,255,255,0.06);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .score-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 34px;
+    font-weight: 700;
+    line-height: 1;
+    color: ${scoreColor};
+  }
+
+  .score-of {
+    font-size: 10px;
+    color: rgba(242,239,233,0.62);
+    margin-top: 4px;
+  }
+
+  .score-label {
+    font-size: 28px;
+    line-height: 1;
+    color: ${scoreColor};
+    margin-bottom: 8px;
+  }
+
+  .score-body {
+    font-size: 13px;
+    line-height: 1.7;
+    color: rgba(242,239,233,0.8);
+  }
+
+  .stats-grid,
+  .two-up,
+  .rec-grid,
+  .timeline-grid {
+    display: grid;
+    gap: 12px;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(4, 1fr);
+    margin-top: 14px;
+  }
+
+  .stat-card,
+  .summary-card,
+  .panel,
+  .timeline-card {
+    background: rgba(255,255,255,0.84);
+    border: 1px solid var(--border);
+  }
+
+  .stat-card {
+    min-height: 92px;
+    padding: 16px;
+  }
+
+  .stat-label {
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+  }
+
+  .stat-value {
+    font-size: 24px;
+    line-height: 1.05;
+    font-weight: 700;
+  }
+
+  .summary-card {
+    margin-top: 12px;
+    padding: 14px 18px;
+    background: linear-gradient(180deg, rgba(255,242,236,0.8), rgba(255,255,255,0.88));
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .summary-title {
+    font-size: 26px;
+    margin-bottom: 6px;
+    font-family: 'Instrument Serif', serif;
+  }
+
+  .summary-text {
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--text-secondary);
+  }
+
+  .section-header {
+    margin: 18px 0 14px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .section-title {
+    font-size: 36px;
+    line-height: 1;
+    margin: 0;
+  }
+
+  .section-copy {
+    max-width: 300px;
+    font-size: 12px;
+    line-height: 1.6;
+    color: var(--text-secondary);
+    text-align: right;
+  }
+
+  .two-up {
+    grid-template-columns: 0.95fr 1.05fr;
+  }
+
+  .panel {
+    padding: 20px;
+  }
+
+  .panel-dark {
+    background: linear-gradient(180deg, var(--data-bg) 0%, var(--data-surface) 100%);
+    border-color: var(--data-border);
+    color: var(--data-text);
+  }
+
+  .panel-kicker {
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: inherit;
+    opacity: 0.72;
+    margin-bottom: 12px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .ai-title {
+    font-family: 'Instrument Serif', serif;
+    font-size: 29px;
+    line-height: 1;
+    margin-bottom: 8px;
+    color: ${ai.found ? '#f6d38f' : '#f4b0a0'};
+  }
+
+  .ai-copy {
+    font-size: 13px;
+    line-height: 1.7;
+    color: rgba(242,239,233,0.8);
+    margin-bottom: 14px;
+  }
+
+  .ai-model-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .ai-model {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 16px;
+    padding: 14px;
+  }
+
+  .ai-model-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .ai-model-name {
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .ai-model-pill,
+  .ai-tag {
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    border-radius: 999px;
+    padding: 4px 7px;
+  }
+
+  .ai-model-pill {
+    background: rgba(255,255,255,0.08);
+    color: rgba(242,239,233,0.8);
+  }
+
+  .ai-list {
+    display: grid;
+    gap: 6px;
+  }
+
+  .ai-row {
+    display: grid;
+    grid-template-columns: 22px 1fr auto;
+    gap: 8px;
+    align-items: center;
+    padding: 8px 10px;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.05);
+  }
+
+  .ai-row.match {
+    background: rgba(21,128,61,0.14);
+  }
+
+  .ai-rank {
+    color: rgba(242,239,233,0.62);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+  }
+
+  .ai-name {
+    font-size: 11px;
+    line-height: 1.5;
+  }
+
+  .ai-tag {
+    background: rgba(21,128,61,0.2);
+    color: #9ae6b4;
+  }
+
+  .risk-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .risk-box {
+    background: var(--bg-alt);
+    border-radius: 16px;
+    padding: 14px;
+  }
+
+  .risk-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+  }
+
+  .risk-value {
+    font-size: 30px;
+    line-height: 1;
+    font-weight: 700;
+  }
+
+  .priority-list,
+  .checklist {
+    display: grid;
+    gap: 10px;
+  }
+
+  .priority-item {
+    display: grid;
+    grid-template-columns: 42px 1fr;
+    gap: 12px;
+    padding: 14px;
+    background: var(--bg-alt);
+    border-radius: 16px;
+  }
+
+  .priority-index {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  .priority-title,
+  .rec-title,
+  .timeline-title {
+    font-size: 17px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+
+  .priority-body,
+  .check-tip,
+  .rec-body,
+  .timeline-copy,
+  .cta-copy {
+    font-size: 12px;
+    line-height: 1.7;
+    color: var(--text-secondary);
+  }
+
+  .check-item {
+    padding: 16px;
+    border: 1px solid transparent;
+  }
+
+  .check-top {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  .check-badge {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 12px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .check-main {
+    flex: 1;
+  }
+
+  .check-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .check-title {
+    font-size: 15px;
+    font-weight: 700;
+  }
+
+  .check-value {
+    font-size: 11px;
+    white-space: nowrap;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .check-meta {
+    margin: 3px 0 6px;
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .rec-grid,
+  .timeline-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .rec-card,
+  .timeline-card {
+    padding: 18px;
+  }
+
+  .rec-card {
+    background: linear-gradient(180deg, rgba(255,255,255,0.9), rgba(255,242,236,0.64));
+    border: 1px solid var(--border);
+  }
+
+  .rec-kicker,
+  .timeline-kicker {
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 8px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .cta-card {
+    margin-top: 16px;
+    padding: 20px;
+    background: linear-gradient(180deg, var(--data-bg), var(--data-surface));
+    border: 1px solid var(--data-border);
+    color: var(--data-text);
+    display: grid;
+    grid-template-columns: 1.2fr 0.8fr;
+    gap: 16px;
+  }
+
+  .cta-title {
+    font-size: 34px;
+    line-height: 0.95;
+    margin-bottom: 8px;
+  }
+
+  .contact-stack {
+    display: grid;
+    gap: 10px;
+  }
+
+  .contact-item {
+    padding: 12px;
+    border-radius: 14px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .contact-label {
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: rgba(242,239,233,0.56);
+    margin-bottom: 5px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .contact-value {
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--data-text);
+  }
+
+  .footer {
+    position: absolute;
+    left: 18mm;
+    right: 18mm;
+    bottom: 7mm;
+    color: var(--text-muted);
+    font-size: 9px;
+    padding-top: 3mm;
+    border-top: 1px solid rgba(212, 207, 197, 0.55);
+    background: linear-gradient(180deg, rgba(250,248,245,0), rgba(250,248,245,0.96) 22%, rgba(250,248,245,1) 100%);
+  }
+
+  .page {
+    padding-bottom: 40mm !important;
+  }
+
+  .screen-toolbar {
+    position: fixed;
+    top: 18px;
+    right: 18px;
+    display: flex;
+    gap: 8px;
+    z-index: 30;
+  }
+
+  .screen-button {
+    border: 1px solid var(--border-strong);
+    background: rgba(255,255,255,0.92);
+    color: var(--text);
+    border-radius: 999px;
+    padding: 10px 14px;
+    font-size: 12px;
+    font-weight: 700;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    box-shadow: 0 8px 24px rgba(26,24,20,0.08);
+  }
+
+  @media screen and (max-width: 768px) {
+    html, body {
+      background: var(--bg-alt);
+    }
+
+    /* ── Toolbar: sticky bottom bar ── */
+    .screen-toolbar {
+      position: fixed;
+      top: auto;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      padding: 12px 16px;
+      background: rgba(255,255,255,0.95);
+      backdrop-filter: blur(12px);
+      border-top: 1px solid var(--border);
+      justify-content: center;
+      z-index: 50;
+    }
+
+    .screen-button {
+      min-height: 48px;
+      width: 100%;
+      max-width: 360px;
+      font-size: 14px;
+      padding: 12px 20px;
+    }
+
+    /* ── Page cards ── */
+    .page {
+      width: 100%;
+      min-height: auto;
+      margin: 0;
+      padding: 20px 16px 80px;
+      border-radius: 0;
+      overflow: hidden;
+      page-break-after: auto;
+    }
+
+    .page + .page {
+      border-top: 6px solid var(--bg-alt);
+    }
+
+    .page::before {
+      display: none;
+    }
+
+    .page-inner {
+      padding-bottom: 0;
+    }
+
+    /* ── Topbar ── */
+    .topbar {
+      flex-direction: row;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .brand-mark {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+    }
+
+    .brand-name {
+      font-size: 15px;
+    }
+
+    .brand-sub {
+      font-size: 8px;
+    }
+
+    .topbar .mono {
+      font-size: 10px;
+    }
+
+    /* ── Hero ── */
+    .hero {
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+
+    .hero-copy {
+      padding: 18px;
+    }
+
+    .eyebrow {
+      font-size: 9px;
+    }
+
+    .report-title {
+      font-size: 2rem;
+      margin: 8px 0;
+    }
+
+    .hero-body {
+      max-width: none;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .subject-card {
+      margin-top: 12px;
+      padding-top: 10px;
+    }
+
+    .subject-name {
+      font-size: 20px;
+    }
+
+    .subject-meta {
+      font-size: 12px;
+    }
+
+    /* ── Score card ── */
+    .score-card {
+      padding: 20px;
+      align-items: center;
+      text-align: center;
+    }
+
+    .score-ring {
+      width: 110px;
+      height: 110px;
+      margin-bottom: 14px;
+    }
+
+    .score-core {
+      width: 78px;
+      height: 78px;
+    }
+
+    .score-num {
+      font-size: 1.6rem;
+    }
+
+    .score-label {
+      font-size: 22px;
+    }
+
+    .score-body {
+      max-width: none;
+      font-size: 12px;
+    }
+
+    /* ── Stats grid ── */
+    .stats-grid {
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .stat-card {
+      min-height: 72px;
+      padding: 12px;
+    }
+
+    .stat-label {
+      font-size: 9px;
+      margin-bottom: 6px;
+    }
+
+    .stat-value {
+      font-size: 18px;
+    }
+
+    /* ── Summary card ── */
+    .summary-card {
+      margin-top: 10px;
+      padding: 12px 14px;
+    }
+
+    .summary-title {
+      font-size: 20px;
+    }
+
+    .summary-text {
+      max-width: none;
+      font-size: 12px;
+    }
+
+    /* ── Section headers ── */
+    .section-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 6px;
+      margin: 16px 0 12px;
+    }
+
+    .section-title {
+      font-size: 24px;
+    }
+
+    .section-copy {
+      max-width: none;
+      text-align: left;
+      font-size: 11px;
+    }
+
+    .page-indicator {
+      font-size: 10px;
+    }
+
+    /* ── Two-up / panels ── */
+    .two-up {
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+
+    .panel {
+      padding: 16px;
+    }
+
+    .ai-title {
+      font-size: 22px;
+    }
+
+    .ai-copy {
+      font-size: 12px;
+    }
+
+    .ai-model-grid {
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+
+    .ai-model {
+      padding: 12px;
+    }
+
+    .ai-row {
+      padding: 6px 8px;
+    }
+
+    .ai-name {
+      font-size: 11px;
+    }
+
+    /* ── Risk / priority ── */
+    .risk-grid {
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+    }
+
+    .risk-box {
+      padding: 10px;
+    }
+
+    .risk-value {
+      font-size: 24px;
+    }
+
+    .priority-item {
+      grid-template-columns: 36px 1fr;
+      gap: 10px;
+      padding: 12px;
+    }
+
+    .priority-index {
+      width: 36px;
+      height: 36px;
+      font-size: 12px;
+    }
+
+    .priority-title,
+    .rec-title,
+    .timeline-title {
+      font-size: 15px;
+    }
+
+    /* ── Checklist ── */
+    .checklist {
+      gap: 8px;
+    }
+
+    .check-item {
+      padding: 12px;
+    }
+
+    .check-row {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 4px;
+    }
+
+    .check-title {
+      font-size: 14px;
+    }
+
+    .check-value {
+      white-space: normal;
+      font-size: 10px;
+    }
+
+    .check-tip {
+      font-size: 11px;
+    }
+
+    /* ── Recs / timeline ── */
+    .rec-grid,
+    .timeline-grid {
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+
+    .rec-card,
+    .timeline-card {
+      padding: 14px;
+    }
+
+    /* ── CTA card ── */
+    .cta-card {
+      grid-template-columns: 1fr;
+      gap: 14px;
+      padding: 18px;
+    }
+
+    .cta-title {
+      font-size: 24px;
+    }
+
+    .contact-stack {
+      gap: 8px;
+    }
+
+    .contact-item {
+      padding: 10px;
+    }
+
+    /* ── Footer ── */
+    .footer {
+      position: static;
+      margin-top: 20px;
+      gap: 6px;
+      padding-top: 12px;
+      width: 100%;
+      background: none;
+      font-size: 9px;
+      text-align: center;
+      flex-direction: column;
+      align-items: center;
+    }
+  }
+
+  @media print {
+    html, body {
+      background: transparent !important;
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+    .screen-toolbar { display: none !important; }
+    .page {
+      margin: 0 !important;
+      padding: 12mm 18mm !important;
+      box-shadow: none !important;
+      min-height: auto !important;
+      page-break-after: auto !important;
+      page-break-before: auto !important;
+    }
+    .page::before {
+      display: none !important;
+    }
+    .page-inner {
+      padding-bottom: 0 !important;
+    }
+    .summary-card,
+    .hero,
+    .score-card,
+    .check-item,
+    .rec-card,
+    .timeline-card,
+    .cta-card,
+    .priority-item,
+    .stat-card {
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+    .topbar {
+      break-after: avoid;
+      page-break-after: avoid;
+    }
+    .section-header {
+      break-after: avoid;
+      page-break-after: avoid;
+    }
+    .checklist {
+      break-before: avoid;
+      page-break-before: avoid;
+    }
+    .footer {
+      position: static !important;
+      break-inside: avoid;
+      page-break-inside: avoid;
+      margin-top: 12px;
+      background: none !important;
+    }
+  }
+</style>
+</head>
+<body>
+  <div class="screen-toolbar">
+    <button class="screen-button" onclick="(function(){var u=new URL(window.location.href);u.searchParams.set('format','pdf');window.open(u.toString())})()">Download PDF</button>
+  </div>
+  <section class="page">
+    <div class="page-inner">
+      <div class="topbar">
+        <div class="brand">
+          <div class="brand-mark">
+            <svg width="24" height="24" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <circle cx="16" cy="15" r="9" stroke="white" stroke-width="2" fill="none" opacity="0.35"/>
+              <circle cx="16" cy="15" r="5" stroke="white" stroke-width="2" fill="none" opacity="0.65"/>
+              <circle cx="16" cy="15" r="2" fill="white"/>
+              <path d="M20 11L25 6" stroke="white" stroke-width="2.2" stroke-linecap="round"/>
+              <path d="M25 6L25 10" stroke="white" stroke-width="2" stroke-linecap="round"/>
+              <path d="M25 6L21 6" stroke="white" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div>
+            <div class="brand-name">ReachRight</div>
+            <div class="brand-sub">Premium visibility report</div>
+          </div>
+        </div>
+        <div class="mono">${safeDate}</div>
+      </div>
+
+      <div class="hero">
+        <div class="hero-copy">
+          <div class="eyebrow">Prepared for local businesses ready to grow</div>
+          <div class="report-title">AI Visibility<br>and Local Presence</div>
+          <div class="hero-body">
+            A premium review of how ${safeName} appears across Google Business signals, website readiness, review strength, and AI-generated recommendations.
+          </div>
+
+          <div class="subject-card">
+            <div class="eyebrow">Business reviewed</div>
+            <div class="subject-name">${safeName}</div>
+            <div class="subject-meta">${safeAddress}<br>${safeType}</div>
+          </div>
+        </div>
+
+        <div class="score-card">
+          <div>
+            <div class="eyebrow" style="color: rgba(242,239,233,0.56);">Overall score</div>
+            <div class="score-ring">
+              <div class="score-core">
+                <div class="score-num">${score}</div>
+                <div class="score-of mono">/100</div>
+              </div>
+            </div>
+            <div class="score-label">${safeScoreLabel}</div>
+            <div class="score-body">${safeScoreSummary}</div>
+          </div>
+          <div class="mono" style="color: rgba(242,239,233,0.56);">ReachRight assessment model</div>
+        </div>
+      </div>
+
+      <div class="stats-grid">
+        ${statCards}
+      </div>
+
+      <div class="summary-card">
+        <div class="summary-title">Executive Summary</div>
+        <div class="summary-text">
+          This report shows what already looks credible online, where discovery is breaking, and which fixes should be prioritised first.
+        </div>
+      </div>
+
+      <div class="footer">
+        <span>reachright.app</span>
+        <span>Confidential report prepared for ${safeName}</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="page">
+    <div class="page-inner">
+      <div class="topbar">
+        <div class="brand">
+          <div class="brand-mark">
+            <svg width="24" height="24" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <circle cx="16" cy="15" r="9" stroke="white" stroke-width="2" fill="none" opacity="0.35"/>
+              <circle cx="16" cy="15" r="5" stroke="white" stroke-width="2" fill="none" opacity="0.65"/>
+              <circle cx="16" cy="15" r="2" fill="white"/>
+              <path d="M20 11L25 6" stroke="white" stroke-width="2.2" stroke-linecap="round"/>
+              <path d="M25 6L25 10" stroke="white" stroke-width="2" stroke-linecap="round"/>
+              <path d="M25 6L21 6" stroke="white" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div>
+            <div class="brand-name">ReachRight</div>
+            <div class="brand-sub">Detailed diagnosis</div>
+          </div>
+        </div>
+        <div class="mono">Page 2 of 3</div>
+      </div>
+
+      <div class="section-header">
+        <h2 class="section-title">Where visibility is leaking</h2>
+        <div class="section-copy">These are the signals affecting whether customers trust you enough to click, call, or visit.</div>
+      </div>
+
+      <div class="two-up">
+        <div class="panel panel-dark">
+          <div class="panel-kicker">AI recommendation scan</div>
+          <div class="ai-title">${ai.found ? 'Recommended by AI models' : 'Not recommended by AI models'}</div>
+          <div class="ai-copy">
+            ${ai.found
+              ? `${safeName} appears in at least one leading AI recommendation set. The next step is improving position and consistency across models.`
+              : `${safeName} is absent from current AI recommendation sets. That means AI-first customers are more likely to be routed to competitors.`}
+          </div>
+
+          <div class="ai-model-grid">
+            <div class="ai-model">
+              <div class="ai-model-head">
+                <span class="ai-model-name">Google Gemini</span>
+                <span class="ai-model-pill">${ai.geminiFound ? `#${ai.geminiRank}` : 'Not found'}</span>
+              </div>
+              <div class="ai-list">
+                ${geminiMarkup || '<div class="ai-row"><span class="ai-rank">-</span><span class="ai-name">No ranking returned.</span><span></span></div>'}
+              </div>
+            </div>
+
+            <div class="ai-model">
+              <div class="ai-model-head">
+                <span class="ai-model-name">ChatGPT</span>
+                <span class="ai-model-pill">${ai.chatgptFound ? `#${ai.chatgptRank}` : 'Not found'}</span>
+              </div>
+              <div class="ai-list">
+                ${chatgptMarkup || '<div class="ai-row"><span class="ai-rank">-</span><span class="ai-name">No ranking returned.</span><span></span></div>'}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-kicker" style="color: var(--text-muted);">Risk summary</div>
+          <div class="risk-grid">
+            <div class="risk-box">
+              <div class="risk-label">Critical</div>
+              <div class="risk-value" style="color: var(--danger);">${badCount}</div>
+            </div>
+            <div class="risk-box">
+              <div class="risk-label">Watch</div>
+              <div class="risk-value" style="color: var(--warning);">${warnCount}</div>
+            </div>
+            <div class="risk-box">
+              <div class="risk-label">Healthy</div>
+              <div class="risk-value" style="color: var(--success);">${goodCount}</div>
+            </div>
+          </div>
+
+          <div class="panel-kicker" style="color: var(--text-muted);">Priority fixes</div>
+          <div class="priority-list">
+            ${priorityMarkup}
+          </div>
+        </div>
+      </div>
+
+      <div class="footer">
+        <span>reachright.app</span>
+        <span>Confidential report prepared for ${safeName}</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="page">
+    <div class="page-inner">
+      <div class="topbar">
+        <div class="brand">
+          <div class="brand-mark">
+            <svg width="24" height="24" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <circle cx="16" cy="15" r="9" stroke="white" stroke-width="2" fill="none" opacity="0.35"/>
+              <circle cx="16" cy="15" r="5" stroke="white" stroke-width="2" fill="none" opacity="0.65"/>
+              <circle cx="16" cy="15" r="2" fill="white"/>
+              <path d="M20 11L25 6" stroke="white" stroke-width="2.2" stroke-linecap="round"/>
+              <path d="M25 6L25 10" stroke="white" stroke-width="2" stroke-linecap="round"/>
+              <path d="M25 6L21 6" stroke="white" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div>
+            <div class="brand-name">ReachRight</div>
+            <div class="brand-sub">Detailed checklist</div>
+          </div>
+        </div>
+        <div class="mono">Page 3 of 4</div>
+      </div>
+
+      <div class="section-header">
+        <h2 class="section-title">Signal-by-signal checklist</h2>
+        <div class="section-copy">Every row below represents a trust or discovery signal customers see before they decide.</div>
+      </div>
+
+      <div class="checklist">
+        ${checklistMarkup}
+      </div>
+
+      <div class="footer">
+        <span>reachright.app</span>
+        <span>Confidential report prepared for ${safeName}</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="page">
+    <div class="page-inner">
+      <div class="topbar">
+        <div class="brand">
+          <div class="brand-mark">
+            <svg width="24" height="24" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <circle cx="16" cy="15" r="9" stroke="white" stroke-width="2" fill="none" opacity="0.35"/>
+              <circle cx="16" cy="15" r="5" stroke="white" stroke-width="2" fill="none" opacity="0.65"/>
+              <circle cx="16" cy="15" r="2" fill="white"/>
+              <path d="M20 11L25 6" stroke="white" stroke-width="2.2" stroke-linecap="round"/>
+              <path d="M25 6L25 10" stroke="white" stroke-width="2" stroke-linecap="round"/>
+              <path d="M25 6L21 6" stroke="white" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div>
+            <div class="brand-name">ReachRight</div>
+            <div class="brand-sub">Action roadmap</div>
+          </div>
+        </div>
+        <div class="mono">Page 4 of 4</div>
+      </div>
+
+      <div class="section-header">
+        <h2 class="section-title">Recommended next moves</h2>
+        <div class="section-copy">This roadmap is ordered to improve trust first, then local discovery, then durable ranking strength.</div>
+      </div>
+
+      <div class="rec-grid">
+        ${recommendationsMarkup}
+      </div>
+
+      <div class="timeline-grid" style="margin-top: 14px;">
+        <div class="timeline-card">
+          <div class="timeline-kicker">Phase 1</div>
+          <div class="timeline-title">Weeks 1-2</div>
+          <div class="timeline-copy">Fix incomplete or missing business fundamentals so customers see a credible presence immediately.</div>
+        </div>
+        <div class="timeline-card">
+          <div class="timeline-kicker">Phase 2</div>
+          <div class="timeline-title">Weeks 3-6</div>
+          <div class="timeline-copy">Improve profile freshness, social proof, and service clarity to increase click-through and trust.</div>
+        </div>
+        <div class="timeline-card">
+          <div class="timeline-kicker">Phase 3</div>
+          <div class="timeline-title">Weeks 7-12</div>
+          <div class="timeline-copy">Build repeated business signals so both Google and AI systems encounter stronger structured evidence.</div>
+        </div>
+      </div>
+
+      <div class="cta-card">
+        <div>
+          <div class="eyebrow" style="color: rgba(242,239,233,0.56);">Execution support</div>
+          <div class="cta-title">If needed, we can turn this audit into execution.</div>
+          <div class="cta-copy" style="color: rgba(242,239,233,0.78);">
+            ReachRight builds the website, sharpens the Google listing, and upgrades the signals that help AI and customers pick your business over nearby alternatives.
+          </div>
+        </div>
+
+        <div class="contact-stack">
+          <div class="contact-item">
+            <div class="contact-label">WhatsApp</div>
+            <div class="contact-value">+91 7439 677 931</div>
+          </div>
+          <div class="contact-item">
+            <div class="contact-label">Website</div>
+            <div class="contact-value">reachright.app</div>
+          </div>
+          <div class="contact-item">
+            <div class="contact-label">Email</div>
+            <div class="contact-value">mriganka.mondal@reachright.app</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer">
+        <span>reachright.app</span>
+        <span>Confidential report prepared for ${safeName}</span>
+      </div>
+    </div>
+  </section>
+</body>
+</html>`;
+}
+
 
 /* ── API Route ─────────────────────────────────────────────────────────────── */
 
@@ -232,24 +1697,32 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ name, address, type, score: finalScore, items, ai, recommendations, date });
     }
 
-    // 3. Generate PDF report
+    // PDF download
+    if (format === 'pdf') {
+      const pdfElement = React.createElement(ReportPDF, { data: { name, address, type, score: finalScore, items, ai, recommendations, date } });
+      const stream = await renderToStream(pdfElement as any);
 
+      const readableStream = new ReadableStream({
+        start(controller) {
+          stream.on('data', (chunk) => controller.enqueue(new Uint8Array(chunk)));
+          stream.on('end', () => controller.close());
+          stream.on('error', (err) => controller.error(err));
+        }
+      });
 
-    const pdfElement = React.createElement(ReportPDF, { data: { name, address, type, score: finalScore, items, ai, recommendations, date } });
-    const stream = await renderToStream(pdfElement as any);
-    
-    const readableStream = new ReadableStream({
-      start(controller) {
-        stream.on('data', (chunk) => controller.enqueue(new Uint8Array(chunk)));
-        stream.on('end', () => controller.close());
-        stream.on('error', (err) => controller.error(err));
-      }
-    });
+      return new NextResponse(readableStream, {
+        headers: {
+          'Content-Type': 'application/pdf',
+          'Content-Disposition': `attachment; filename="${name.replace(/[^a-zA-Z0-9]/g, '-')}-ReachRight-Report.pdf"`,
+        },
+      });
+    }
 
-    return new NextResponse(readableStream, {
+    // HTML preview (default — shareable link)
+    const html = generateReportHTML({ name, address, type, score: finalScore, items, ai, recommendations, date });
+    return new NextResponse(html, {
       headers: {
-        'Content-Type': 'application/pdf',
-        'Content-Disposition': `inline; filename="${name.replace(/[^a-zA-Z0-9]/g, '-')}-ReachRight-Report.pdf"`,
+        'Content-Type': 'text/html; charset=utf-8',
       },
     });
   } catch (err) {
