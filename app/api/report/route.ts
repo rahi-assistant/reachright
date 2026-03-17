@@ -1264,9 +1264,17 @@ function generateReportHTML(data: {
       break-inside: avoid;
       page-break-inside: avoid;
     }
+    .topbar {
+      break-after: avoid;
+      page-break-after: avoid;
+    }
     .section-header {
       break-after: avoid;
       page-break-after: avoid;
+    }
+    .checklist {
+      break-before: avoid;
+      page-break-before: avoid;
     }
     .footer {
       break-inside: avoid;
