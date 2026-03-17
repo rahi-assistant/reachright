@@ -1247,11 +1247,18 @@ function generateReportHTML(data: {
     .screen-toolbar { display: none !important; }
     .page {
       margin: 0 !important;
+      padding: 12mm 18mm !important;
       box-shadow: none !important;
       min-height: auto !important;
-      page-break-after: always;
+      page-break-after: auto !important;
+      page-break-before: auto !important;
     }
-    .page:last-child { page-break-after: auto; }
+    .page::before {
+      display: none !important;
+    }
+    .page-inner {
+      padding-bottom: 0 !important;
+    }
     .summary-card,
     .hero,
     .score-card,
@@ -1277,8 +1284,11 @@ function generateReportHTML(data: {
       page-break-before: avoid;
     }
     .footer {
+      position: static !important;
       break-inside: avoid;
       page-break-inside: avoid;
+      margin-top: 12px;
+      background: none !important;
     }
   }
 </style>
