@@ -440,8 +440,17 @@ function generateReportHTML(data: {
               <div class="model-name">Google Gemini</div>
               <div class="model-rank">${ai.geminiFound ? `Ranked #${ai.geminiRank}` : 'Not Ranked'}</div>
             </div>
-            <div class="ai-row ${ai.geminiFound ? 'match' : 'miss'}">
-              <div class="ai-rank-text">${ai.geminiFound ? ai.geminiRank : '-'}</div>
+            <div class="ai-list" style="display: flex; flex-direction: column; gap: 8px;">
+              ${ai.mentioned.length > 0 
+                ? ai.mentioned.slice(0, 3).map((comp, idx) => `
+                    <div class="ai-row ${ai.geminiFound && comp.toLowerCase().includes(name.toLowerCase()) ? 'match' : 'miss'}">
+                      <div class="ai-rank-text">${idx + 1}</div>
+                      <div class="ai-name-text">${escapeHtml(comp)}</div>
+                    </div>
+                  `).join('')
+                : `<div class="ai-row miss"><div class="ai-rank-text">-</div><div class="ai-name-text">No competitors found</div></div>`
+              }
+            </div>
               <div class="ai-name-text">${ai.geminiFound ? safeName : 'Competitors recommended instead'}</div>
             </div>
           </div>
@@ -451,8 +460,17 @@ function generateReportHTML(data: {
               <div class="model-name">OpenAI ChatGPT</div>
               <div class="model-rank">${ai.chatgptFound ? `Ranked #${ai.chatgptRank}` : 'Not Ranked'}</div>
             </div>
-            <div class="ai-row ${ai.chatgptFound ? 'match' : 'miss'}">
-              <div class="ai-rank-text">${ai.chatgptFound ? ai.chatgptRank : '-'}</div>
+            <div class="ai-list" style="display: flex; flex-direction: column; gap: 8px;">
+              ${ai.chatgptMentioned && ai.chatgptMentioned.length > 0 
+                ? ai.chatgptMentioned.slice(0, 3).map((comp, idx) => `
+                    <div class="ai-row ${ai.chatgptFound && comp.toLowerCase().includes(name.toLowerCase()) ? 'match' : 'miss'}">
+                      <div class="ai-rank-text">${idx + 1}</div>
+                      <div class="ai-name-text">${escapeHtml(comp)}</div>
+                    </div>
+                  `).join('')
+                : `<div class="ai-row miss"><div class="ai-rank-text">-</div><div class="ai-name-text">No competitors found</div></div>`
+              }
+            </div>
               <div class="ai-name-text">${ai.chatgptFound ? safeName : 'Competitors recommended instead'}</div>
             </div>
           </div>
