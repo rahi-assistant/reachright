@@ -1239,40 +1239,44 @@ function generateReportHTML(data: {
   }
 
   @media print {
-    html, body { background: transparent; }
-    .page { margin: 0; }
-    .screen-toolbar { display: none; }
+    html, body {
+      background: transparent !important;
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+    .screen-toolbar { display: none !important; }
+    .page {
+      margin: 0 !important;
+      box-shadow: none !important;
+      min-height: auto !important;
+      page-break-after: always;
+    }
+    .page:last-child { page-break-after: auto; }
+    .summary-card,
+    .hero,
+    .score-card,
+    .panel,
+    .check-item,
+    .rec-card,
+    .timeline-card,
+    .cta-card,
+    .priority-item,
+    .stats-grid,
+    .risk-grid {
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+    .footer {
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
   }
 </style>
 </head>
 <body>
   <div class="screen-toolbar">
-    <button class="screen-button" id="pdf-btn" onclick="downloadPDF()">Download PDF</button>
+    <button class="screen-button" onclick="window.print()">Download PDF</button>
   </div>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.2/html2pdf.bundle.min.js"></script>
-  <script>
-    function downloadPDF() {
-      var btn = document.getElementById('pdf-btn');
-      btn.textContent = 'Generating...';
-      btn.disabled = true;
-      var toolbar = document.querySelector('.screen-toolbar');
-      toolbar.style.display = 'none';
-      var pages = document.querySelectorAll('.page');
-      var opt = {
-        margin: 0,
-        filename: document.title.replace(/[^a-zA-Z0-9 ]/g, '') + '.pdf',
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true, logging: false },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-        pagebreak: { mode: ['css', 'legacy'], before: '.page' }
-      };
-      html2pdf().set(opt).from(document.body).save().then(function() {
-        toolbar.style.display = '';
-        btn.textContent = 'Download PDF';
-        btn.disabled = false;
-      });
-    }
-  </script>
   <section class="page">
     <div class="page-inner">
       <div class="topbar">
